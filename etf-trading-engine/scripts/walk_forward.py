@@ -1,7 +1,6 @@
-import argparse, yaml, pandas as pd, json
+import argparse, yaml, pandas as pd, json, numpy as np
 from pathlib import Path
-import numpy as np
-import sys, os
+import sys, os, math
 
 repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if repo_root not in sys.path: sys.path.insert(0, repo_root)
@@ -10,6 +9,17 @@ from src.engine.backtest import run_backtest
 def slice_by_dates(df, start, end):
     m = (df['Date']>=pd.Timestamp(start)) & (df['Date']<=pd.Timestamp(end))
     return df.loc[m].copy()
+
+def safe_calmar(k):
+    # Ensure Calmar is finite numeric; if not, coerce to 0.0
+    c = k.get('Calmar', None)
+    try:
+        c = float(c)
+        if math.isfinite(c):
+            return c
+        return 0.0
+    except Exception:
+        return 0.0
 
 def main():
     ap = argparse.ArgumentParser()
@@ -23,7 +33,6 @@ def main():
         cfg = yaml.safe_load(f)
 
     prices = pd.read_csv(args.data)
-    # Normalize to tz-naive in UTC
     prices['Date'] = pd.to_datetime(prices['Date'], utc=True).dt.tz_localize(None)
 
     with open(args.windows, 'r', encoding='utf-8') as f:
@@ -39,24 +48,23 @@ def main():
             continue
         out = run_backtest(df, cfg)
         k = out['kpis']
+        k['Calmar'] = safe_calmar(k)
         k['window'] = name
         k['test_start'] = ts
         k['test_end'] = te
         results.append(k)
-        print(f"WF {name}: Sharpe={k['Sharpe']:.3f} Calmar={k['Calmar']:.3f} MaxDD={k['MaxDD']:.3f} PF={k['ProfitFactor']:.3f}")
+        print(f"WF {name}: Sharpe={k.get('Sharpe',float('nan')):.3f} Calmar={k.get('Calmar',0.0):.3f} MaxDD={k.get('MaxDD',float('nan')):.3f} PF={k.get('ProfitFactor',float('nan')):.3f}")
 
     outdir = Path(args.outdir); outdir.mkdir(parents=True, exist_ok=True)
 
     if not results:
-        with open(outdir/'wf_summary.txt','w',encoding='utf-8') as f:
-            f.write("No WF results (empty windows or data).\n")
-        with open(outdir/'wf_report.json','w',encoding='utf-8') as f:
-            json.dump({"windows":[],"aggregates":{}}, f, indent=2)
+        (outdir/'wf_summary.txt').write_text("No WF results (empty windows or data).\n", encoding='utf-8')
+        (outdir/'wf_report.json').write_text(json.dumps({"windows":[],"aggregates":{}}, indent=2), encoding='utf-8')
         print("WF: no results")
         return
 
     dfres = pd.DataFrame(results)
-    calmar = dfres['Calmar'].values
+    calmar = pd.to_numeric(dfres['Calmar'], errors='coerce').values.astype(float)
     mean_c = float(np.nanmean(calmar))
     std_c = float(np.nanstd(calmar))
     cov_pct = float((std_c / (abs(mean_c)+1e-12))*100.0)
@@ -66,18 +74,17 @@ def main():
         "calmar_mean": mean_c,
         "calmar_std": std_c,
         "calmar_cov_pct": cov_pct,
-        "sharpe_mean": float(np.nanmean(dfres['Sharpe'])),
-        "maxdd_mean": float(np.nanmean(dfres['MaxDD'])),
-        "profit_factor_mean": float(np.nanmean(dfres['ProfitFactor'])),
+        "sharpe_mean": float(np.nanmean(pd.to_numeric(dfres['Sharpe'], errors='coerce'))),
+        "maxdd_mean": float(np.nanmean(pd.to_numeric(dfres['MaxDD'], errors='coerce'))),
+        "profit_factor_mean": float(np.nanmean(pd.to_numeric(dfres['ProfitFactor'], errors='coerce'))),
     }
 
-    with open(outdir/'wf_report.json','w',encoding='utf-8') as f:
-        json.dump({"windows": results, "aggregates": aggregates}, f, indent=2)
+    (outdir/'wf_report.json').write_text(json.dumps({"windows": results, "aggregates": aggregates}, indent=2), encoding='utf-8')
 
     with open(outdir/'wf_summary.txt','w',encoding='utf-8') as f:
         f.write("Walk-Forward Summary\n")
         for _, r in dfres.iterrows():
-            f.write(f"- {r['window']}: Calmar={r['Calmar']:.3f}, Sharpe={r['Sharpe']:.3f}, MaxDD={r['MaxDD']:.3f}, PF={r['ProfitFactor']:.3f}\n")
+            f.write(f"- {r['window']}: Calmar={float(r['Calmar']):.3f}, Sharpe={float(r['Sharpe']):.3f}, MaxDD={float(r['MaxDD']):.3f}, PF={float(r['ProfitFactor']):.3f}\n")
         f.write(f"\nAggregates: calmar_mean={mean_c:.3f}, calmar_cov_pct={cov_pct:.2f}%\n")
 
     print(f"WF aggregates: calmar_mean={mean_c:.3f}, calmar_cov_pct={cov_pct:.2f}%")

@@ -1,0 +1,6 @@
+stop_criteria:
+  min_sharpe: 0.25
+  profit_factor_min: 1.05
+  maxdd_limit_pct: 0.35
+  wf_calmar_var_max_pct: 40.0
+  wf_trim: 1
