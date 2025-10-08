@@ -12,6 +12,10 @@ def main():
 
     p = Path(args.data)
     df = pd.read_csv(p)
+    # Normalize Date to tz-naive
+    if 'Date' in df.columns:
+        df['Date'] = pd.to_datetime(df['Date'], utc=True).dt.tz_localize(None)
+
     issues = []
 
     rows = len(df)
@@ -24,11 +28,6 @@ def main():
     for col in ['Date','Ticker','Close']:
         if col not in df.columns:
             issues.append(f"missing_col:{col}")
-    if 'Date' in df.columns:
-        try:
-            df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-        except Exception:
-            issues.append("date_parse_failed")
     if 'Close' in df.columns:
         null_close = df['Close'].isna().mean()*100.0
         if null_close > 1.0:

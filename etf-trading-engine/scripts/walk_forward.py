@@ -23,7 +23,8 @@ def main():
         cfg = yaml.safe_load(f)
 
     prices = pd.read_csv(args.data)
-    prices['Date'] = pd.to_datetime(prices['Date'])
+    # Normalize to tz-naive in UTC
+    prices['Date'] = pd.to_datetime(prices['Date'], utc=True).dt.tz_localize(None)
 
     with open(args.windows, 'r', encoding='utf-8') as f:
         wins = yaml.safe_load(f)
@@ -54,7 +55,6 @@ def main():
         print("WF: no results")
         return
 
-    import math
     dfres = pd.DataFrame(results)
     calmar = dfres['Calmar'].values
     mean_c = float(np.nanmean(calmar))
