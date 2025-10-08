@@ -1,9 +1,7 @@
 # DECISIONS.md
 
-Registro decisioni chiave (data ↓).
-
-- **[2025-10-08] Ingestion web (Yahoo)** — sostituisce datalake locale. Normalizzazione date `utc=True` → tz-naive. Dedup su `(Ticker,Date)`.
-- **[2025-10-08] Guardrails “rigidi + YELLOW”** — soglie invariate; se valore entro ±10% o WF incompleto → YELLOW, altrimenti RED.
-- **[2025-10-08] Walk-Forward annuale + trimmed CoV** — finestre annuali; `wf_trim=1` (ignora best/worst) e soglia CoV 30%.
-- **[2025-10-08] Signals & Operational report** — breakout 52w +0.3%, SL −7%, TP +14%, p(win)=45%; LT SWDA/TNOW con trailing.
-- **Universo** — esteso (US core + UCITS LSE/Xetra); ampliamento a lotti curati per stabilità WF; liquidità min (ADV/Volume).
+- **[2025-10-08] Ingestion web (Yahoo)**; normalizzazione date tz-naive; dedup `(Ticker,Date)`.
+- **[2025-10-08] Guardrails “rigidi + YELLOW”**; soglie invariate, borderline/NaN ⇒ YELLOW.
+- **[2025-10-08] WF annuale + trimmed CoV** (`wf_trim:1`, soglia 30%).
+- **[2025-10-08] Signals & Operational report** (breakout 52w, SL −7%, TP +14%, p=45%); LT SWDA/TNOW.
+- **[2025-10-08] Pubblicazione dataset nel datalake** → cartella `latest/` su https://github.com/antoniosanso/etf-datalake.
