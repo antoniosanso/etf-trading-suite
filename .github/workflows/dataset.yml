@@ -1,0 +1,47 @@
+name: EOD Dataset Publisher
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "15 4 * * *"  # 06:15 Europe/Rome
+
+jobs:
+  build-dataset:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: etf-trading-engine
+    steps:
+      - name: Checkout suite
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r etf-trading-engine/requirements.txt
+
+      - name: Download EOD (Web)
+        run: |
+          python etf-trading-engine/scripts/download_eod_yf.py             --universe ./etf-trading-config/universe.csv             --output ./etf-trading-engine/data/eod.csv             --start 2018-01-01             --threads 4             --sleep 0.25             --adjusted
+
+      - name: Sanity check
+        run: |
+          python etf-trading-engine/scripts/sanity_check.py             --data ./etf-trading-engine/data/eod.csv             --min_rows 1000 --max_dd_allowed_pct 90
+
+      - name: Build dataset (CSV+Parquet)
+        run: |
+          python etf-trading-engine/scripts/publish_dataset.py             --input ./etf-trading-engine/data/eod.csv             --outdir ./dataset
+
+      - name: Upload dataset artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: eod-dataset
+          path: |
+            dataset/eod-latest.csv
+            dataset/eod-latest.parquet
+            dataset/summary.json
+            dataset/by_ticker/*
