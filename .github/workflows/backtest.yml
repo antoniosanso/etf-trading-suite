@@ -48,6 +48,24 @@ jobs:
             --data ./etf-trading-engine/data/eod.csv \
             --outdir ./outputs
 
+      - name: Sanity check merged CSV
+        run: |
+          python - << 'PY'
+          import pandas as pd
+          df = pd.read_csv('etf-trading-engine/data/eod.csv')
+          print("rows =", len(df), "| tickers =", df['Ticker'].nunique())
+          print("date range:", df['Date'].min(), "→", df['Date'].max())
+          PY
+
+      - name: Show KPIs in logs
+        run: |
+          echo "==== SUMMARY.TXT ===="
+          cat ./outputs/summary.txt || true
+          echo "==== KPIS.JSON ===="
+          cat ./outputs/kpis.json || true
+          echo "==== EQUITY CURVE (head) ===="
+          head -n 5 ./outputs/equity_curve.csv || true
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
