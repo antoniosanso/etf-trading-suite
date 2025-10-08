@@ -1,4 +1,4 @@
-name: Backtest (CI)
+name: Backtest (CI via Web Ingest)
 
 on:
   push:
@@ -26,15 +26,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r etf-trading-engine/requirements.txt
 
-      - name: Checkout datalake (read-only)
-        uses: actions/checkout@v4
-        with:
-          repository: antoniosanso/etf-datalake
-          path: etf-datalake
-
-      - name: Merge EOD
+      - name: Download EOD from Yahoo Finance
         run: |
-          python etf-trading-engine/scripts/merge_eod.py             --datalake ./etf-datalake             --output ./etf-trading-engine/data/eod.csv             --recursive             --datecol dt --closecol close --tickercol ticker             --opencol open --highcol high --lowcol low --volumecol volume
+          python etf-trading-engine/scripts/download_eod_yf.py             --universe ./etf-trading-config/universe.csv             --output ./etf-trading-engine/data/eod.csv             --start 2018-01-01             --threads 4             --sleep 0.25             --adjusted
 
       - name: Sanity check EOD
         run: |
