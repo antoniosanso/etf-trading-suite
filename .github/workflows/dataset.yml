@@ -6,12 +6,12 @@ on:
     - cron: "15 4 * * *"  # 06:15 Europe/Rome
 
 jobs:
-  build-dataset:
+  build-and-publish:
     runs-on: ubuntu-latest
     env:
       PYTHONPATH: etf-trading-engine
     steps:
-      - name: Checkout suite
+      - name: Checkout trading-suite
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -43,5 +43,22 @@ jobs:
           path: |
             dataset/eod-latest.csv
             dataset/eod-latest.parquet
-            dataset/summary.json
             dataset/by_ticker/*
+            dataset/summary.json
+
+      - name: Publish to datalake repo (latest/)
+        env:
+          GH_TOKEN: ${{ secrets.DATASINK_TOKEN }}
+        run: |
+          set -e
+          git config --global user.name "ci-bot"
+          git config --global user.email "ci-bot@users.noreply.github.com"
+          rm -rf /tmp/datalake
+          git clone https://x-access-token:${{ secrets.DATASINK_TOKEN }}@github.com/antoniosanso/etf-datalake.git /tmp/datalake
+          mkdir -p /tmp/datalake/latest
+          cp -f dataset/eod-latest.csv /tmp/datalake/latest/eod-latest.csv
+          if [ -f dataset/eod-latest.parquet ]; then cp -f dataset/eod-latest.parquet /tmp/datalake/latest/eod-latest.parquet; fi
+          cp -f dataset/summary.json /tmp/datalake/latest/summary.json
+          git -C /tmp/datalake add -A
+          git -C /tmp/datalake commit -m "Update dataset (from trading-suite $${GITHUB_SHA} )" || echo "No changes to commit"
+          git -C /tmp/datalake push origin main
