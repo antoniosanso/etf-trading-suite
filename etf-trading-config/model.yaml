@@ -1,38 +1,14 @@
 version: "v4.1"
-regime:
-  trend_mode:
-    tp1_r: 1.0
-    trailing_atr_mult: 2.5
-    heat_max_pct: 8.0
-  defensive_mode:
-    tp1_pct: 0.5
-    tp2_pct: 0.5
-    time_stop_days: 5
-    heat_max_pct: 4.0
 params:
   atr_pct: 0.02
   buffer_mult: 0.10
   vol_z_min: 0.85
   risk_per_trade_pct: 0.015
-  time_stop_min: 4
-  time_stop_max: 7
-  nav_premium_cap_pct: 0.5
-  spread_cap_pct: 0.25
-  correlation_cap: 2
 stop_criteria:
-  # KPI guardrails
   min_sharpe: 0.30
   profit_factor_min: 1.10
   maxdd_limit_pct: 0.35
-  # Walk-forward stability (trimmed CoV of Calmar: ignore best/worst window)
   wf_calmar_var_max_pct: 30.0
   wf_trim: 1
-  # legacy keys (ignored by guardrails.py unless referenced altrove)
-  calmar_improve_min_pct: 2.0
-  maxdd_reduction_min_pp: 0.30
-  wf_calmar_var_max_pct_legacy: 15.0
-  spa_white_p_max: 0.10
-  under_benchmark_windows: 2
 data:
-  source_repo: "web_ingest"  # now fetching via Yahoo Finance
   expected_columns: ["Date","Ticker","Open","High","Low","Close","Volume","Currency"]

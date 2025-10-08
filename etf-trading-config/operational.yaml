@@ -1,0 +1,15 @@
+trading:
+  capital_eur: 10000
+  lines: 3
+  breakout_margin_pct: 0.3
+  sl_pct: 7
+  tp_pct: 14
+  p_win: 0.45
+  horizon: "20–60 gg"
+  prefer_signals: true
+  tickers_override: []
+long_term:
+  capital_eur: 30000
+  holdings:
+    - { ticker: "SWDA.MI", weight_pct: 60, trail_stop_pct: 12, exp_12m_return_pct: 11 }
+    - { ticker: "TNOW.MI", weight_pct: 40, trail_stop_pct: 18, exp_12m_return_pct: 14 }

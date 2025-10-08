@@ -1,0 +1,13 @@
+equity_base: 100000
+risk_per_trade_pct: 0.01
+top_n: 15
+min_adv20: 1000000
+min_volume: 100000
+atr_period: 14
+atr_mult_sl: 2.0
+tp_r_multiples: [2.0,3.0]
+breakout_lookback: 55
+sma_fast: 50
+sma_slow: 200
+trend_filter: true
+rank_weights: {mom252: 0.6, mom63: 0.4}

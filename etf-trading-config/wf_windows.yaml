@@ -2,4 +2,4 @@ windows:
   - { name: "WF-2022", test_start: "2022-01-01", test_end: "2022-12-31" }
   - { name: "WF-2023", test_start: "2023-01-01", test_end: "2023-12-31" }
   - { name: "WF-2024", test_start: "2024-01-01", test_end: "2024-12-31" }
-  - { name: "WF-2025YTD", test_start: "2025-01-01", test_end: "2025-10-08" }
+  - { name: "WF-2025YTD", test_start: "2025-01-01", test_end: "2025-12-31" }
