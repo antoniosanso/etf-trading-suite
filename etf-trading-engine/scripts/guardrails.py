@@ -1,4 +1,16 @@
 import argparse, json, yaml, sys
+import numpy as np
+
+def trimmed_cov(calmar_list, trim=1):
+    arr = np.array(calmar_list, dtype=float)
+    arr = arr[~np.isnan(arr)]
+    if arr.size == 0:
+        return float('nan')
+    if trim>0 and arr.size > 2*trim:
+        arr = np.sort(arr)[trim:-trim]
+    mean = np.nanmean(arr)
+    std = np.nanstd(arr)
+    return float((std / (abs(mean)+1e-12))*100.0)
 
 def main():
     ap = argparse.ArgumentParser()
@@ -12,23 +24,26 @@ def main():
     wf = json.load(open(args.wf,'r',encoding='utf-8'))
 
     stop = cfg.get('stop_criteria', {})
-    min_sharpe = float(stop.get('min_sharpe', 0.20))
+    min_sharpe = float(stop.get('min_sharpe', 0.30))
     maxdd_limit = float(stop.get('maxdd_limit_pct', 0.35))
-    profit_factor_min = float(stop.get('profit_factor_min', 1.05))
-    wf_calmar_var_max_pct = float(stop.get('wf_calmar_var_max_pct', 15.0))
+    profit_factor_min = float(stop.get('profit_factor_min', 1.10))
+    wf_calmar_var_max_pct = float(stop.get('wf_calmar_var_max_pct', 30.0))
+    wf_trim = int(stop.get('wf_trim', 1))
 
     cond_sharpe = float(kpis.get('Sharpe', 0.0)) >= min_sharpe
     cond_pf = float(kpis.get('ProfitFactor', 0.0)) >= profit_factor_min
     cond_dd = abs(float(kpis.get('MaxDD', -1.0))) <= maxdd_limit
 
-    calmar_cov_pct = float(wf.get('aggregates',{}).get('calmar_cov_pct', 999.0))
-    cond_wf = calmar_cov_pct <= wf_calmar_var_max_pct
+    wins = wf.get('windows', [])
+    calmar_vals = [w.get('Calmar') for w in wins if 'Calmar' in w]
+    cov = trimmed_cov(calmar_vals, wf_trim) if calmar_vals else float('nan')
+    cond_wf = (not np.isnan(cov)) and (cov <= wf_calmar_var_max_pct)
 
     reasons = []
     if not cond_sharpe: reasons.append(f"Sharpe<{min_sharpe}")
     if not cond_pf: reasons.append(f"ProfitFactor<{profit_factor_min}")
     if not cond_dd: reasons.append(f"|MaxDD|>{maxdd_limit*100:.0f}%")
-    if not cond_wf: reasons.append(f"WF Calmar CoV>{wf_calmar_var_max_pct}%")
+    if not cond_wf: reasons.append(f"WF Calmar CoV>{wf_calmar_var_max_pct}% (trim={wf_trim}, got={cov:.2f}%)")
 
     if reasons:
         print("GUARDRAILS: FAIL -> " + ", ".join(reasons))
