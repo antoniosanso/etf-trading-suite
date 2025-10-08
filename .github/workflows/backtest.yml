@@ -4,8 +4,8 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch: {}
-  # schedule:
-  #   - cron: "0 4 * * *"  # 06:00 Europe/Rome
+  schedule:
+    - cron: "0 4 * * *"  # 06:00 Europe/Rome
 
 jobs:
   backtest:
@@ -34,39 +34,36 @@ jobs:
 
       - name: Merge EOD
         run: |
-          python etf-trading-engine/scripts/merge_eod.py \
-            --datalake ./etf-datalake \
-            --output ./etf-trading-engine/data/eod.csv \
-            --recursive \
-            --datecol dt --closecol close --tickercol ticker \
-            --opencol open --highcol high --lowcol low --volumecol volume
+          python etf-trading-engine/scripts/merge_eod.py             --datalake ./etf-datalake             --output ./etf-trading-engine/data/eod.csv             --recursive             --datecol dt --closecol close --tickercol ticker             --opencol open --highcol high --lowcol low --volumecol volume
+
+      - name: Sanity check EOD
+        run: |
+          python etf-trading-engine/scripts/sanity_check.py             --data ./etf-trading-engine/data/eod.csv             --min_rows 1000 --max_dd_allowed_pct 90
 
       - name: Run backtest
         run: |
-          python etf-trading-engine/scripts/run_ci_backtest.py \
-            --config ./etf-trading-config/model.yaml \
-            --data ./etf-trading-engine/data/eod.csv \
-            --outdir ./outputs
+          python etf-trading-engine/scripts/run_ci_backtest.py             --config ./etf-trading-config/model.yaml             --data ./etf-trading-engine/data/eod.csv             --outdir ./outputs
 
-      - name: Sanity check merged CSV
+      - name: Walk-Forward validation
         run: |
-          python - << 'PY'
-          import pandas as pd
-          df = pd.read_csv('etf-trading-engine/data/eod.csv')
-          print("rows =", len(df), "| tickers =", df['Ticker'].nunique())
-          print("date range:", df['Date'].min(), "→", df['Date'].max())
-          PY
+          python etf-trading-engine/scripts/walk_forward.py             --config ./etf-trading-config/model.yaml             --data ./etf-trading-engine/data/eod.csv             --windows ./etf-trading-config/wf_windows.yaml             --outdir ./outputs
+
+      - name: Guardrails (stop criteria)
+        run: |
+          python etf-trading-engine/scripts/guardrails.py             --config ./etf-trading-config/model.yaml             --kpis ./outputs/kpis.json             --wf ./outputs/wf_report.json
 
       - name: Show KPIs in logs
+        if: always()
         run: |
           echo "==== SUMMARY.TXT ===="
           cat ./outputs/summary.txt || true
           echo "==== KPIS.JSON ===="
           cat ./outputs/kpis.json || true
-          echo "==== EQUITY CURVE (head) ===="
-          head -n 5 ./outputs/equity_curve.csv || true
+          echo "==== WF SUMMARY ===="
+          cat ./outputs/wf_summary.txt || true
 
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backtest-artifacts
@@ -74,3 +71,5 @@ jobs:
             outputs/kpis.json
             outputs/equity_curve.csv
             outputs/summary.txt
+            outputs/wf_report.json
+            outputs/wf_summary.txt
