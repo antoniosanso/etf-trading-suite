@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+import argparse, pandas as pd
+ap = argparse.ArgumentParser()
+ap.add_argument("--data", required=True)
+ap.add_argument("--as_of", required=True)
+ap.add_argument("--out", required=True)
+args = ap.parse_args()
+df = pd.read_csv(args.data)
+date_col = next((c for c in df.columns if c.lower() in ("date","dt","time")), None)
+if date_col is None: raise SystemExit("No Date column found")
+df[date_col] = pd.to_datetime(df[date_col])
+cut = pd.to_datetime(args.as_of)
+f = df[df[date_col] <= cut].copy()
+f.to_csv(args.out, index=False)
+print(f"Saved {len(f)} rows to {args.out}")
