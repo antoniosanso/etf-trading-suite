@@ -62,12 +62,9 @@ jobs:
         run: |
           python etf-trading-engine/scripts/aggregate_news.py             --sources ./etf-trading-config/news_sources.yaml             --universe ./etf-trading-config/universe.csv             --topics ./etf-trading-config/mappings/etf_topics.csv             --outdir ./features
 
-      - name: Build features (respect source=multi)
+      - name: Build features (sentiment/regime/fundamentals)
         run: |
           python etf-trading-engine/scripts/build_features.py             --features ./etf-trading-config/features.yaml             --universe ./etf-trading-config/universe.csv             --outdir ./features
-
-      - name: Fundamentals (top holdings)
-        run: |
           python etf-trading-engine/scripts/aggregate_fundamentals.py             --universe ./etf-trading-config/universe.csv             --outdir ./features
 
       - name: Generate signals
@@ -109,22 +106,23 @@ jobs:
           cp outputs/wf_report.json reports/daily/$(date -u +%F)/wf_report.json || true
           cp outputs/guardrails_status.json reports/daily/$(date -u +%F)/guardrails_status.json || true
           python - << 'PY'
-import json, os, sys, pathlib, datetime
+import json, datetime, pathlib
 from pathlib import Path
 d = Path("outputs")
 ts = datetime.datetime.utcnow().isoformat()+"Z"
-def safe_load(p):
+def load(p):
     try:
-        with open(p,"r",encoding="utf-8") as f: return json.load(f)
-    except Exception: return None
-k = safe_load(d/"kpis.json") or {}
-wf = safe_load(d/"wf_report.json") or {}
-gr = safe_load(d/"guardrails_status.json") or {}
+        return json.load(open(p,"r",encoding="utf-8"))
+    except Exception:
+        return None
+k = load(d/"kpis.json") or {}
+wf = load(d/"wf_report.json") or {}
+gr = load(d/"guardrails_status.json") or {}
 Path("reports").mkdir(exist_ok=True)
 Path("reports/history").mkdir(parents=True, exist_ok=True)
-with open("reports/history/kpis.jsonl","a",encoding="utf-8") as f: f.write(json.dumps({"ts":ts,"kpis":k})+"\n")
-with open("reports/history/wf.jsonl","a",encoding="utf-8") as f: f.write(json.dumps({"ts":ts,"wf":wf})+"\n")
-with open("reports/latest.json","w",encoding="utf-8") as f: json.dump({"ts":ts,"kpis":k,"wf":wf,"guardrails":gr}, f, indent=2)
+open("reports/history/kpis.jsonl","a",encoding="utf-8").write(json.dumps({"ts":ts,"kpis":k})+"\n")
+open("reports/history/wf.jsonl","a",encoding="utf-8").write(json.dumps({"ts":ts,"wf":wf})+"\n")
+json.dump({"ts":ts,"kpis":k,"wf":wf,"guardrails":gr}, open("reports/latest.json","w",encoding="utf-8"), indent=2)
 PY
           git add reports || true
           git commit -m "ci: append daily reports $(date -u +%F)" || true
