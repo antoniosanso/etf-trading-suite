@@ -42,12 +42,13 @@ jobs:
           pip install yfinance feedparser beautifulsoup4 requests vaderSentiment pandas numpy pyyaml
 
       - name: Download EOD
-        shell: bash
-        run: |
-          python etf-trading-engine/scripts/download_eod_yf.py \
+  shell: bash
+  run: |
+    python etf-trading-engine/scripts/download_eod_yf.py \
       --universe ./etf-trading-config/universe.csv \
       --output ./etf-trading-engine/data/eod.csv \
       --start 2018-01-01 --threads 4 --sleep 0.15 --min_success 10
+
 
       - name: Sanity check EOD
         shell: bash
