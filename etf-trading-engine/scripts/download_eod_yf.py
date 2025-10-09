@@ -13,8 +13,10 @@ def fetch_ticker(ticker, start, end):
             'Open':'Open','High':'High','Low':'Low','Close':'Close','Adj Close':'AdjClose','Volume':'Volume'
         })
         df['Ticker'] = str(ticker)
-        # ensure timezone-naive
         df['Date'] = pd.to_datetime(df['Date'], utc=True).dt.tz_localize(None)
+        for c in ['Open','High','Low','Close','AdjClose','Volume']:
+            if c in df.columns:
+                df[c] = pd.to_numeric(df[c], errors='coerce')
         return df[['Date','Ticker','Open','High','Low','Close','AdjClose','Volume']]
     except Exception as e:
         print(f"[WARN] {ticker}: {e}", file=sys.stderr)
@@ -28,7 +30,7 @@ def main():
     ap.add_argument('--end', default=None)
     ap.add_argument('--threads', type=int, default=4)
     ap.add_argument('--sleep', type=float, default=0.2)
-    ap.add_argument('--adjusted', action='store_true', help='(compat) ignorato: salviamo sia Close che AdjClose')
+    ap.add_argument('--adjusted', action='store_true')
     args = ap.parse_args()
 
     uni = pd.read_csv(args.universe)
@@ -40,7 +42,7 @@ def main():
     out = []
     with ThreadPoolExecutor(max_workers=max(args.threads,1)) as ex:
         fut = {ex.submit(fetch_ticker, t, start, end): t for t in tickers}
-        for i, f in enumerate(as_completed(fut)):
+        for f in as_completed(fut):
             t = fut[f]
             try:
                 df = f.result()

@@ -1,4 +1,4 @@
-import argparse, yaml, pandas as pd, numpy as np, re
+import argparse, yaml, pandas as pd, numpy as np, re, os
 from pathlib import Path
 def try_imports():
     import importlib; mods = {}
@@ -40,7 +40,7 @@ def sentiment(txt):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sources", required=True); ap.add_argument("--universe", required=True)
-    ap.add_argument("--topics", required=True); ap.add_argument("--outdir", required=True)
+    ap.add_argument("--topics", required=False); ap.add_argument("--outdir", required=True)
     a = ap.parse_args()
     cfg = yaml.safe_load(open(a.sources,'r',encoding='utf-8'))
     uni = pd.read_csv(a.universe); uni["Ticker"]=uni["Ticker"].astype(str)
