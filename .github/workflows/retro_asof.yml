@@ -1,0 +1,106 @@
+name: Retro Run — As Of
+on:
+  workflow_dispatch:
+    inputs:
+      as_of:
+        description: 'Data as-of (YYYY-MM-DD)'
+        required: true
+        type: string
+      slippage_bps:
+        description: 'Slippage (basis points, es. 5 = 0.05%)'
+        required: false
+        type: string
+        default: '5'
+
+jobs:
+  retro:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: etf-trading-engine
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r etf-trading-engine/requirements.txt
+          pip install pandas numpy pyyaml
+        shell: bash
+
+      - name: Download EOD (full, latest)
+        run: |
+          python etf-trading-engine/scripts/download_eod_yf.py \
+            --universe ./etf-trading-config/universe.csv \
+            --output ./etf-trading-engine/data/eod.csv \
+            --start 2018-01-01 --threads 4 --sleep 0.15 --min_success 10
+        shell: bash
+
+      - name: Clip data to as-of
+        run: |
+          python etf-trading-engine/scripts/clip_asof.py \
+            --data etf-trading-engine/data/eod.csv \
+            --as_of "${{ inputs.as_of }}" \
+            --out etf-trading-engine/data/eod_asof.csv
+        shell: bash
+
+      - name: Build features (as-of)
+        run: |
+          python etf-trading-engine/scripts/build_features.py \
+            --features ./etf-trading-config/features.yaml \
+            --universe ./etf-trading-config/universe.csv \
+            --outdir ./features_asof \
+            --data etf-trading-engine/data/eod_asof.csv
+        shell: bash
+
+      - name: Generate signals (as-of)
+        run: |
+          python etf-trading-engine/scripts/signals.py \
+            --config ./etf-trading-config/signals.yaml \
+            --data etf-trading-engine/data/eod_asof.csv \
+            --outdir ./outputs_asof \
+            --features_cfg ./etf-trading-config/features.yaml \
+            --features_dir ./features_asof
+        shell: bash
+
+      - name: Backtest (as-of)
+        run: |
+          python etf-trading-engine/scripts/run_ci_backtest.py \
+            --config etf-trading-config/model.yaml \
+            --data etf-trading-engine/data/eod_asof.csv \
+            --outdir outputs_asof
+        shell: bash
+
+      - name: Walk-Forward (as-of)
+        run: |
+          python etf-trading-engine/scripts/walk_forward.py \
+            --config etf-trading-config/model.yaml \
+            --data etf-trading-engine/data/eod_asof.csv \
+            --windows etf-trading-config/wf_windows.yaml \
+            --outdir outputs_asof
+        shell: bash
+
+      - name: Evaluate realized P&L vs expected & B&H + extra checks
+        run: |
+          python etf-trading-engine/scripts/retro_evaluate.py \
+            --as_of "${{ inputs.as_of }}" \
+            --signals ./outputs_asof/signals/entries_today.csv \
+            --eod_full ./etf-trading-engine/data/eod.csv \
+            --universe ./etf-trading-config/universe.csv \
+            --slippage_bps "${{ inputs.slippage_bps }}" \
+            --outdir ./retro
+        shell: bash
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: retro-${{ inputs.as_of }}
+          path: |
+            outputs_asof/**
+            features_asof/**
+            retro/**
