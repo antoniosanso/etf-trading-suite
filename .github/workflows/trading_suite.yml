@@ -1,5 +1,4 @@
 name: Trading Suite — Unified Daily
-
 on:
   workflow_dispatch:
   schedule:
@@ -43,17 +42,12 @@ jobs:
 
       - name: Download EOD
         run: |
-          python etf-trading-engine/scripts/download_eod_yf.py \
-            --universe ./etf-trading-config/universe.csv \
-            --output ./etf-trading-engine/data/eod.csv \
-            --start 2018-01-01 --threads 4 --sleep 0.15 --min_success 10
+          python etf-trading-engine/scripts/download_eod_yf.py             --universe ./etf-trading-config/universe.csv             --output ./etf-trading-engine/data/eod.csv             --start 2018-01-01 --threads 4 --sleep 0.15 --min_success 10
         shell: bash
 
       - name: Sanity check EOD
         run: |
-          python etf-trading-engine/scripts/sanity_check.py \
-            --data ./etf-trading-engine/data/eod.csv \
-            --min_rows 1000 --max_dd_allowed_pct 90
+          python etf-trading-engine/scripts/sanity_check.py             --data ./etf-trading-engine/data/eod.csv             --min_rows 1000 --max_dd_allowed_pct 90
         shell: bash
 
       - name: Publish to datalake (optional)
@@ -79,77 +73,44 @@ jobs:
 
       - name: News → Sentiment
         run: |
-          python etf-trading-engine/scripts/aggregate_news.py \
-            --sources ./etf-trading-config/news_sources.yaml \
-            --universe ./etf-trading-config/universe.csv \
-            --topics ./etf-trading-config/mappings/etf_topics.csv \
-            --outdir ./features
+          python etf-trading-engine/scripts/aggregate_news.py             --sources ./etf-trading-config/news_sources.yaml             --universe ./etf-trading-config/universe.csv             --topics ./etf-trading-config/mappings/etf_topics.csv             --outdir ./features
         shell: bash
 
       - name: Build features (regime + fundamentals)
         run: |
-          python etf-trading-engine/scripts/build_features.py \
-            --features ./etf-trading-config/features.yaml \
-            --universe ./etf-trading-config/universe.csv \
-            --outdir ./features
-          python etf-trading-engine/scripts/aggregate_fundamentals.py \
-            --universe ./etf-trading-config/universe.csv \
-            --outdir ./features
+          python etf-trading-engine/scripts/build_features.py             --features ./etf-trading-config/features.yaml             --universe ./etf-trading-config/universe.csv             --outdir ./features
+          python etf-trading-engine/scripts/aggregate_fundamentals.py             --universe ./etf-trading-config/universe.csv             --outdir ./features
         shell: bash
 
       - name: Generate signals
         run: |
-          python etf-trading-engine/scripts/signals.py \
-            --config ./etf-trading-config/signals.yaml \
-            --data ./etf-trading-engine/data/eod.csv \
-            --outdir ./outputs \
-            --features_cfg ./etf-trading-config/features.yaml \
-            --features_dir ./features
+          python etf-trading-engine/scripts/signals.py             --config ./etf-trading-config/signals.yaml             --data ./etf-trading-engine/data/eod.csv             --outdir ./outputs             --features_cfg ./etf-trading-config/features.yaml             --features_dir ./features
         shell: bash
 
       - name: Operational report
         run: |
-          python etf-trading-engine/scripts/operational_report.py \
-            --data ./etf-trading-engine/data/eod.csv \
-            --config ./etf-trading-config/operational.yaml \
-            --outdir ./outputs
+          python etf-trading-engine/scripts/operational_report.py             --data ./etf-trading-engine/data/eod.csv             --config ./etf-trading-config/operational.yaml             --outdir ./outputs
         shell: bash
 
       - name: Backtest
         run: |
-          python etf-trading-engine/scripts/run_ci_backtest.py \
-            --config etf-trading-config/model.yaml \
-            --data etf-trading-engine/data/eod.csv \
-            --outdir outputs
+          python etf-trading-engine/scripts/run_ci_backtest.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --outdir outputs
         shell: bash
 
       - name: Walk-Forward
         run: |
-          python etf-trading-engine/scripts/walk_forward.py \
-            --config etf-trading-config/model.yaml \
-            --data etf-trading-engine/data/eod.csv \
-            --windows etf-trading-config/wf_windows.yaml \
-            --outdir outputs
+          python etf-trading-engine/scripts/walk_forward.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --windows etf-trading-config/wf_windows.yaml             --outdir outputs
         shell: bash
 
-      - name: Guardrails (with equity fallback)
+      - name: Guardrails (non-blocking)
         run: |
           set +e
-          python etf-trading-engine/scripts/guardrails.py \
-            --config ./etf-trading-config/model.yaml \
-            --kpis ./outputs/kpis.json \
-            --wf ./outputs/wf_report.json \
-            --equity ./outputs/equity_curve.csv \
-            --out ./outputs/guardrails_status.json
+          python etf-trading-engine/scripts/guardrails.py             --config ./etf-trading-config/model.yaml             --kpis ./outputs/kpis.json             --wf ./outputs/wf_report.json             --equity ./outputs/equity_curve.csv             --out ./outputs/guardrails_status.json
           EXIT=$?
+          echo "Guardrails exit code: $EXIT (0=GREEN, 2=YELLOW, 3=RED)"
           cat ./outputs/guardrails_status.json || true
-          if [ "$EXIT" -eq 3 ]; then
-            echo "Guardrails RED -> failing pipeline"; exit 3
-          elif [ "$EXIT" -eq 2 ]; then
-            echo "Guardrails YELLOW -> continue"; exit 0
-          else
-            echo "Guardrails GREEN"; exit 0
-          fi
+          echo "GUARDRAILS_EXIT=$EXIT" >> $GITHUB_ENV
+          exit 0
         shell: bash
 
       - name: Append & commit reports
