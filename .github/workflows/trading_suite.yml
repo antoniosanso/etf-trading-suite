@@ -20,14 +20,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Gate 18:15 Europe/Rome
-        shell: bash
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then
             H=$(TZ=Europe/Rome date +%H:%M)
             if [ "$H" != "18:15" ]; then
-              echo "Not 18:15 Europe/Rome, skip"; exit 0
+              echo "Not 18:15; skipping"; exit 0
             fi
           fi
+        shell: bash
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -35,36 +35,33 @@ jobs:
           python-version: '3.11'
 
       - name: Install deps
-        shell: bash
         run: |
           python -m pip install --upgrade pip
           pip install -r etf-trading-engine/requirements.txt
           pip install yfinance feedparser beautifulsoup4 requests vaderSentiment pandas numpy pyyaml
+        shell: bash
 
       - name: Download EOD
-  shell: bash
-  run: |
-    python etf-trading-engine/scripts/download_eod_yf.py \
-      --universe ./etf-trading-config/universe.csv \
-      --output ./etf-trading-engine/data/eod.csv \
-      --start 2018-01-01 --threads 4 --sleep 0.15 --min_success 10
-
+        run: |
+          python etf-trading-engine/scripts/download_eod_yf.py \
+            --universe ./etf-trading-config/universe.csv \
+            --output ./etf-trading-engine/data/eod.csv \
+            --start 2018-01-01 --threads 4 --sleep 0.15 --min_success 10
+        shell: bash
 
       - name: Sanity check EOD
-        shell: bash
         run: |
           python etf-trading-engine/scripts/sanity_check.py \
             --data ./etf-trading-engine/data/eod.csv \
             --min_rows 1000 --max_dd_allowed_pct 90
+        shell: bash
 
-      # <-- niente "if:" con secrets qui: gate in bash
       - name: Publish to datalake (optional)
         env:
           GH_TOKEN: ${{ secrets.DATALAKE_TOKEN }}
-        shell: bash
         run: |
           if [ -z "${GH_TOKEN}" ]; then
-            echo "DATALAKE_TOKEN assente: skip publish"; exit 0
+            echo "DATALAKE_TOKEN not set, skipping"; exit 0
           fi
           set -e
           rm -rf datalake
@@ -78,18 +75,18 @@ jobs:
           echo '{"updated":"'"$(date -u +%FT%TZ)"'","rows":'$(wc -l < etf-trading-engine/data/eod.csv)'}' > datalake/latest/summary.json
           cd datalake && git add latest && git commit -m "Update dataset (from trading-suite)" || true
           git push origin HEAD:main
+        shell: bash
 
       - name: News → Sentiment
-        shell: bash
         run: |
           python etf-trading-engine/scripts/aggregate_news.py \
             --sources ./etf-trading-config/news_sources.yaml \
             --universe ./etf-trading-config/universe.csv \
             --topics ./etf-trading-config/mappings/etf_topics.csv \
             --outdir ./features
+        shell: bash
 
       - name: Build features (regime + fundamentals)
-        shell: bash
         run: |
           python etf-trading-engine/scripts/build_features.py \
             --features ./etf-trading-config/features.yaml \
@@ -98,9 +95,9 @@ jobs:
           python etf-trading-engine/scripts/aggregate_fundamentals.py \
             --universe ./etf-trading-config/universe.csv \
             --outdir ./features
+        shell: bash
 
       - name: Generate signals
-        shell: bash
         run: |
           python etf-trading-engine/scripts/signals.py \
             --config ./etf-trading-config/signals.yaml \
@@ -108,34 +105,34 @@ jobs:
             --outdir ./outputs \
             --features_cfg ./etf-trading-config/features.yaml \
             --features_dir ./features
+        shell: bash
 
       - name: Operational report
-        shell: bash
         run: |
           python etf-trading-engine/scripts/operational_report.py \
             --data ./etf-trading-engine/data/eod.csv \
             --config ./etf-trading-config/operational.yaml \
             --outdir ./outputs
+        shell: bash
 
       - name: Backtest
-        shell: bash
         run: |
           python etf-trading-engine/scripts/run_ci_backtest.py \
             --config etf-trading-config/model.yaml \
             --data etf-trading-engine/data/eod.csv \
             --outdir outputs
+        shell: bash
 
       - name: Walk-Forward
-        shell: bash
         run: |
           python etf-trading-engine/scripts/walk_forward.py \
             --config etf-trading-config/model.yaml \
             --data etf-trading-engine/data/eod.csv \
             --windows etf-trading-config/wf_windows.yaml \
             --outdir outputs
+        shell: bash
 
       - name: Guardrails (with equity fallback)
-        shell: bash
         run: |
           set +e
           python etf-trading-engine/scripts/guardrails.py \
@@ -153,9 +150,9 @@ jobs:
           else
             echo "Guardrails GREEN"; exit 0
           fi
+        shell: bash
 
       - name: Append & commit reports
-        shell: bash
         run: |
           python etf-trading-engine/scripts/append_reports.py
           git config user.name "ci-bot"
@@ -164,6 +161,7 @@ jobs:
           git commit -m "ci: append daily reports $(date -u +%F)" || true
           git pull --rebase || true
           git push || true
+        shell: bash
 
       - name: Upload artifacts
         if: always()
