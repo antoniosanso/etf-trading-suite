@@ -1,4 +1,4 @@
-import argparse, json, yaml, sys, os, math, csv
+import argparse, json, yaml, sys, os, math, csv, glob
 
 def read_kpis(path):
     try:
@@ -8,23 +8,23 @@ def read_kpis(path):
         return {}
 
 def dd_from_equity(csv_path):
-    # Try to recompute MaxDD from equity curve if KPIs look wrong (e.g., 100%)
     try:
         with open(csv_path,'r',encoding='utf-8') as f:
             reader = csv.DictReader(f)
             eq = []
-            for r in reader:
-                for key in ['Equity','equity','NAV','nav','curve','EquityCurve']:
-                    if key in r and r[key]:
+            cols = None
+            for row in reader:
+                if cols is None:
+                    cols = [c for c in row.keys() if c.lower() in ("equity","nav","equitycurve","curve")]
+                val = None
+                for c in cols or []:
+                    if row.get(c):
                         try:
-                            eq.append(float(r[key]))
-                            break
-                        except:
-                            pass
-            if len(eq) < 3: 
-                return None
-            peak = eq[0]
-            maxdd = 0.0
+                            val = float(row[c]); break
+                        except: pass
+                if val is not None: eq.append(val)
+            if len(eq) < 3: return None
+            peak = eq[0]; maxdd = 0.0
             for v in eq:
                 peak = max(peak, v)
                 if peak > 0:
@@ -33,6 +33,12 @@ def dd_from_equity(csv_path):
             return float(maxdd)
     except Exception:
         return None
+
+def auto_find_equity():
+    cand = []
+    for pat in ("outputs/*equity*.csv","outputs/*Equity*.csv","*equity*.csv"):
+        cand += glob.glob(pat)
+    return cand[0] if cand else None
 
 def classify(kpis, cfg):
     sc = cfg.get('stop_criteria', {})
@@ -45,12 +51,6 @@ def classify(kpis, cfg):
     pf = float(kpis.get('ProfitFactor', 0.0))
     maxdd = float(kpis.get('MaxDD_Pct', 1.0))
     calmar_cov = float((kpis.get('WF', {}) or {}).get('Calmar_CoV_pct', 0.0))
-
-    # Fallback se MaxDD = ~100% (1.0) o NaN
-    if (not math.isfinite(maxdd)) or maxdd >= 0.99:
-        eq_dd = kpis.get('_EquityDD_Fallback', None)
-        if eq_dd is not None:
-            maxdd = float(eq_dd)
 
     yb_sharpe = max(0.0, min_sharpe - 0.05)
     yb_pf     = max(1.0, pf_min - 0.04)
@@ -92,26 +92,21 @@ def main():
     cfg = yaml.safe_load(open(a.config,'r',encoding='utf-8'))
     k = read_kpis(a.kpis)
 
-    # Equity fallback for MaxDD if suspicious
-    if a.equity and os.path.exists(a.equity):
-        fallback_dd = dd_from_equity(a.equity)
+    eq_path = a.equity or auto_find_equity()
+    if eq_path and (not isinstance(k.get('MaxDD_Pct', None), (int,float)) or float(k.get('MaxDD_Pct', 1.0)) >= 0.99):
+        fallback_dd = dd_from_equity(eq_path)
         if fallback_dd is not None:
             k['_EquityDD_Fallback'] = fallback_dd
-            # if current MaxDD is clearly wrong (>=0.99), replace for evaluation and output
-            if not isinstance(k.get('MaxDD_Pct', None), (int,float)) or float(k.get('MaxDD_Pct', 1.0)) >= 0.99:
-                k['MaxDD_Pct'] = float(fallback_dd)
+            k['MaxDD_Pct'] = float(fallback_dd)
 
     if a.wf and os.path.exists(a.wf):
-        try:
-            k['WF'] = json.load(open(a.wf,'r',encoding='utf-8'))
-        except Exception:
-            k['WF'] = {}
+        try: k['WF'] = json.load(open(a.wf,'r',encoding='utf-8'))
+        except Exception: k['WF'] = {}
 
     st, issues = classify(k, cfg)
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
-    out = {"status":st,"issues":issues,"kpis":k}
     with open(a.out,'w',encoding='utf-8') as f:
-        json.dump(out, f, indent=2)
+        json.dump({"status":st,"issues":issues,"kpis":k}, f, indent=2)
     print("GUARDRAILS:", st, "->", "; ".join(issues) if issues else "OK")
     sys.exit(0 if st=="GREEN" else (2 if st=="YELLOW" else 3))
 

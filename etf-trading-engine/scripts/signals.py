@@ -59,11 +59,9 @@ def run(cfg_path, data_path, outdir, feat_cfg_path='etf-trading-config/features.
         vol_ok = pd.notna(last['ATR']) and (last['ATR'] > 0)
         sent_z = float(sent_today.get(t, 0.0)) if len(sent_today)>0 else 0.0
         fund_z = float(fund_today.get(t, 0.0)) if len(fund_today)>0 else 0.0
-        rank_score = (cfg['rank_weights']['mom252'] * (last['mom252'] if pd.notna(last['mom252']) else 0.0) +
-                      cfg['rank_weights']['mom63']  * (last['mom63']  if pd.notna(last['mom63'])  else 0.0) +
-                      F['w_sent'] * sent_z + F['w_reg'] * reg_today + F['w_fund'] * fund_z)
-        watch = {'Date': last['Date'].date(), 'Ticker': t, 'Close': float(last['Close']),
-                 'RankScore': float(rank_score), 'SentimentZ': sent_z, 'RegimeZ': reg_today, 'FundamentalsZ': fund_z}
+        rank_score = (cfg['rank_weights']['mom252'] * (last['mom252'] if pd.notna(last['mom252']) else 0.0) +                       cfg['rank_weights']['mom63']  * (last['mom63']  if pd.notna(last['mom63'])  else 0.0) +                       F['w_sent'] * sent_z + F['w_reg'] * reg_today + F['w_fund'] * fund_z)
+        watch = {'Date': last['Date'].date(), 'Ticker': t, 'Close': float(last['Close']), 'RankScore': float(rank_score),
+                 'SentimentZ': sent_z, 'RegimeZ': reg_today, 'FundamentalsZ': fund_z}
         res_watch.append(watch)
         if trend_ok and (breakout_ok or cross_ok) and liquid_ok and vol_ok:
             entry = float(last['Close']); risk = float(cfg['atr_mult_sl']) * float(g['ATR'].iloc[-1])
@@ -72,11 +70,9 @@ def run(cfg_path, data_path, outdir, feat_cfg_path='etf-trading-config/features.
             tp_levels = [entry + r*R for r in cfg.get('tp_r_multiples', [2.0,3.0])]
             equity = float(cfg.get('equity_base', 100000)); risk_dollar = equity * float(cfg.get('risk_per_trade_pct',0.01))
             size = int(np.floor(risk_dollar / R)) if R>0 else 0
-            res_entries.append({'Date': watch['Date'], 'Ticker': t, 'Entry': entry, 'StopLoss': stop,
-                                'TP1': tp_levels[0] if len(tp_levels)>0 else None,
-                                'TP2': tp_levels[1] if len(tp_levels)>1 else None,
-                                'SizeShares': size, 'R': R, 'SentimentZ': sent_z, 'RegimeZ': reg_today,
-                                'FundamentalsZ': fund_z, 'RankScore': float(rank_score)})
+            res_entries.append({'Date': watch['Date'], 'Ticker': t, 'Entry': entry, 'StopLoss': stop, 'TP1': tp_levels[0] if len(tp_levels)>0 else None,
+                                'TP2': tp_levels[1] if len(tp_levels)>1 else None, 'SizeShares': size, 'R': R,
+                                'SentimentZ': sent_z, 'RegimeZ': reg_today, 'FundamentalsZ': fund_z, 'RankScore': float(rank_score)})
     pd.DataFrame(res_watch).sort_values('RankScore', ascending=False).to_csv(outdir/'signals'/'watchlist_today.csv', index=False)
     pd.DataFrame(res_entries).sort_values('RankScore', ascending=False).head(int(cfg['top_n'])).to_csv(outdir/'signals'/'entries_today.csv', index=False)
     print("signals: entries_today.csv & watchlist_today.csv (sentiment/regime/fundamentals)")
