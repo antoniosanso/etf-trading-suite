@@ -1,0 +1,23 @@
+rss:
+  - https://feeds.a.dj.com/rss/RSSMarketsMain.xml
+  - https://www.reutersagency.com/feed/?best-topics=markets&post_type=best
+  - https://feeds.finance.yahoo.com/rss/2.0/headline?s=SPY&region=US&lang=en-US
+  - https://feeds.finance.yahoo.com/rss/2.0/headline?s=QQQ&region=US&lang=en-US
+  - https://www.etftrends.com/feed/
+  - https://www.etf.com/feeds/all
+  - https://seekingalpha.com/market_currents.xml
+google_news_queries:
+  - "site:ishares.com ETF"
+  - "site:vanguard.com ETF"
+  - "site:amundietf.com ETF"
+  - "SPY ETF"
+  - "QQQ ETF"
+  - "MSCI World ETF UCITS"
+  - "S&P 500 ETF UCITS"
+gdelt_enabled: true
+gdelt_topics:
+  - "technology sector"
+  - "energy sector"
+  - "semiconductors"
+  - "emerging markets"
+  - "developed markets"

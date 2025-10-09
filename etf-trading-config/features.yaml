@@ -1,14 +1,19 @@
 sentiment:
   enabled: true
-  source: newsapi
+  source: multi
   lookback_days: 3
-  weight: 0.15   # impostato
+  weight: 0.15
   smoothing_days: 3
   min_articles: 5
   topic_mapping_csv: etf-trading-config/mappings/etf_topics.csv
 regime:
   enabled: true
-  weight: 0.20   # impostato
+  weight: 0.20
   vix_symbol: ^VIX
   credit_risk_ratio: [HYG, IEF]
   smoothing_days: 5
+fundamentals:
+  enabled: true
+  weight: 0.10
+  max_holdings: 15
+  yf_timeout: 20
