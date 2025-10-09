@@ -1,15 +1,23 @@
-#!/usr/bin/env python3
-import argparse, pandas as pd
-ap = argparse.ArgumentParser()
-ap.add_argument("--data", required=True)
-ap.add_argument("--as_of", required=True)
-ap.add_argument("--out", required=True)
-args = ap.parse_args()
-df = pd.read_csv(args.data)
-date_col = next((c for c in df.columns if c.lower() in ("date","dt","time")), None)
-if date_col is None: raise SystemExit("No Date column found")
-df[date_col] = pd.to_datetime(df[date_col])
-cut = pd.to_datetime(args.as_of)
-f = df[df[date_col] <= cut].copy()
-f.to_csv(args.out, index=False)
-print(f"Saved {len(f)} rows to {args.out}")
+import pandas as pd
+import argparse
+
+def main():
+    parser = argparse.ArgumentParser(description="Clip EOD data up to an as-of date.")
+    parser.add_argument("--input", required=True, help="Percorso del file di input (EOD completo).")
+    parser.add_argument("--output", required=True, help="Percorso del file di output clippato.")
+    parser.add_argument("--as-of", required=True, help="Data limite in formato YYYY-MM-DD.")
+    parser.add_argument("--start", required=False, help="Data di inizio (opzionale).")
+    args = parser.parse_args()
+
+    df = pd.read_csv(args.input, parse_dates=["dt"])
+
+    if args.start:
+        df = df[(df["dt"] >= args.start) & (df["dt"] <= args.as_of)]
+    else:
+        df = df[df["dt"] <= args.as_of]
+
+    df.to_csv(args.output, index=False)
+    print(f"✅ Dati tagliati al {args.as_of} salvati in {args.output}")
+
+if __name__ == "__main__":
+    main()
