@@ -49,7 +49,7 @@ jobs:
           python etf-trading-engine/scripts/sanity_check.py             --data ./etf-trading-engine/data/eod.csv             --min_rows 1000 --max_dd_allowed_pct 90
 
       - name: Publish to datalake (optional)
-        if: ${{ secrets.DATALAKE_TOKEN }}
+        if: ${{ secrets.DATALAKE_TOKEN != '' }}
         env:
           GH_TOKEN: ${{ secrets.DATALAKE_TOKEN }}
         shell: bash
