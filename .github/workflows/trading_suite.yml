@@ -1,16 +1,20 @@
 name: Trading Suite — Unified Daily
+
 on:
   workflow_dispatch:
   schedule:
     - cron: '15 16 * * *'   # 18:15 Europe/Rome (CEST)
     - cron: '15 17 * * *'   # 18:15 Europe/Rome (CET)
+
 permissions:
   contents: write
+
 jobs:
   unified:
     runs-on: ubuntu-latest
     env:
       PYTHONPATH: etf-trading-engine
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,8 +25,7 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then
             H=$(TZ=Europe/Rome date +%H:%M)
             if [ "$H" != "18:15" ]; then
-              echo "Not 18:15 Europe/Rome, exit 0"
-              exit 0
+              echo "Not 18:15 Europe/Rome, skip"; exit 0
             fi
           fi
 
@@ -41,19 +44,28 @@ jobs:
       - name: Download EOD
         shell: bash
         run: |
-          python etf-trading-engine/scripts/download_eod_yf.py             --universe ./etf-trading-config/universe.csv             --output ./etf-trading-engine/data/eod.csv             --start 2018-01-01 --threads 4 --sleep 0.25 --adjusted
+          python etf-trading-engine/scripts/download_eod_yf.py \
+            --universe ./etf-trading-config/universe.csv \
+            --output ./etf-trading-engine/data/eod.csv \
+            --start 2018-01-01 --threads 4 --sleep 0.25 --adjusted
 
       - name: Sanity check EOD
         shell: bash
         run: |
-          python etf-trading-engine/scripts/sanity_check.py             --data ./etf-trading-engine/data/eod.csv             --min_rows 1000 --max_dd_allowed_pct 90
+          python etf-trading-engine/scripts/sanity_check.py \
+            --data ./etf-trading-engine/data/eod.csv \
+            --min_rows 1000 --max_dd_allowed_pct 90
 
+      # <-- niente "if:" con secrets qui: gate in bash
       - name: Publish to datalake (optional)
-        if: ${{ secrets.DATALAKE_TOKEN != '' }}
         env:
           GH_TOKEN: ${{ secrets.DATALAKE_TOKEN }}
         shell: bash
         run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "DATALAKE_TOKEN assente: skip publish"; exit 0
+          fi
+          set -e
           rm -rf datalake
           git clone https://github.com/antoniosanso/etf-datalake.git datalake
           cd datalake
@@ -69,39 +81,68 @@ jobs:
       - name: News → Sentiment
         shell: bash
         run: |
-          python etf-trading-engine/scripts/aggregate_news.py             --sources ./etf-trading-config/news_sources.yaml             --universe ./etf-trading-config/universe.csv             --topics ./etf-trading-config/mappings/etf_topics.csv             --outdir ./features
+          python etf-trading-engine/scripts/aggregate_news.py \
+            --sources ./etf-trading-config/news_sources.yaml \
+            --universe ./etf-trading-config/universe.csv \
+            --topics ./etf-trading-config/mappings/etf_topics.csv \
+            --outdir ./features
 
       - name: Build features (regime + fundamentals)
         shell: bash
         run: |
-          python etf-trading-engine/scripts/build_features.py             --features ./etf-trading-config/features.yaml             --universe ./etf-trading-config/universe.csv             --outdir ./features
-          python etf-trading-engine/scripts/aggregate_fundamentals.py             --universe ./etf-trading-config/universe.csv             --outdir ./features
+          python etf-trading-engine/scripts/build_features.py \
+            --features ./etf-trading-config/features.yaml \
+            --universe ./etf-trading-config/universe.csv \
+            --outdir ./features
+          python etf-trading-engine/scripts/aggregate_fundamentals.py \
+            --universe ./etf-trading-config/universe.csv \
+            --outdir ./features
 
       - name: Generate signals
         shell: bash
         run: |
-          python etf-trading-engine/scripts/signals.py             --config ./etf-trading-config/signals.yaml             --data ./etf-trading-engine/data/eod.csv             --outdir ./outputs             --features_cfg ./etf-trading-config/features.yaml             --features_dir ./features
+          python etf-trading-engine/scripts/signals.py \
+            --config ./etf-trading-config/signals.yaml \
+            --data ./etf-trading-engine/data/eod.csv \
+            --outdir ./outputs \
+            --features_cfg ./etf-trading-config/features.yaml \
+            --features_dir ./features
 
       - name: Operational report
         shell: bash
         run: |
-          python etf-trading-engine/scripts/operational_report.py             --data ./etf-trading-engine/data/eod.csv             --config ./etf-trading-config/operational.yaml             --outdir ./outputs
+          python etf-trading-engine/scripts/operational_report.py \
+            --data ./etf-trading-engine/data/eod.csv \
+            --config ./etf-trading-config/operational.yaml \
+            --outdir ./outputs
 
       - name: Backtest
         shell: bash
         run: |
-          python etf-trading-engine/scripts/run_ci_backtest.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --outdir outputs
+          python etf-trading-engine/scripts/run_ci_backtest.py \
+            --config etf-trading-config/model.yaml \
+            --data etf-trading-engine/data/eod.csv \
+            --outdir outputs
 
       - name: Walk-Forward
         shell: bash
         run: |
-          python etf-trading-engine/scripts/walk_forward.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --windows etf-trading-config/wf_windows.yaml             --outdir outputs
+          python etf-trading-engine/scripts/walk_forward.py \
+            --config etf-trading-config/model.yaml \
+            --data etf-trading-engine/data/eod.csv \
+            --windows etf-trading-config/wf_windows.yaml \
+            --outdir outputs
 
       - name: Guardrails (with equity fallback)
         shell: bash
         run: |
           set +e
-          python etf-trading-engine/scripts/guardrails.py             --config ./etf-trading-config/model.yaml             --kpis ./outputs/kpis.json             --wf ./outputs/wf_report.json             --equity ./outputs/equity_curve.csv             --out ./outputs/guardrails_status.json
+          python etf-trading-engine/scripts/guardrails.py \
+            --config ./etf-trading-config/model.yaml \
+            --kpis ./outputs/kpis.json \
+            --wf ./outputs/wf_report.json \
+            --equity ./outputs/equity_curve.csv \
+            --out ./outputs/guardrails_status.json
           EXIT=$?
           cat ./outputs/guardrails_status.json || true
           if [ "$EXIT" -eq 3 ]; then
