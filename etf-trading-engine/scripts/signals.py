@@ -32,8 +32,10 @@ def load_features(feat_cfg_path, features_dir):
 def run(cfg_path, data_path, outdir, feat_cfg_path='etf-trading-config/features.yaml', features_dir='./features'):
     cfg = yaml.safe_load(open(cfg_path,'r',encoding='utf-8'))
     outdir = Path(outdir); (outdir/'signals').mkdir(parents=True, exist_ok=True)
-    df = pd.read_csv(data_path); df['Date'] = pd.to_datetime(df['Date'], utc=True).dt.tz_localize(None)
-    df = df.sort_values(['Ticker','Date']); F = load_features(feat_cfg_path, features_dir)
+    df = pd.read_csv(data_path)
+    df['Date'] = pd.to_datetime(df['Date'], utc=True).dt.tz_localize(None)
+    df = df.sort_values(['Ticker','Date'])
+    F = load_features(feat_cfg_path, features_dir)
     today = df['Date'].max()
     sent_today = F['sent'][F['sent']['Date']==today].set_index('Ticker')['sentiment_z'] if not F['sent'].empty else pd.Series(dtype=float)
     reg_today  = F['reg'][F['reg']['Date']==today]['risk_on'].mean() if not F['reg'].empty else np.nan

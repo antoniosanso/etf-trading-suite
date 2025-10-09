@@ -21,12 +21,12 @@ def build_regime(vix_symbol="^VIX", credit_pair=("HYG","IEF"), smoothing_days=5)
     reg['risk_on'] = zscore(reg['risk_on_raw'].rolling(smoothing_days, min_periods=1).mean())
     return reg[['Date','risk_on']].dropna()
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument('--features', required=True)
-    ap.add_argument('--universe', required=True); ap.add_argument('--outdir', required=True)
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--features', required=True); ap.add_argument('--universe', required=True); ap.add_argument('--outdir', required=True)
     a = ap.parse_args(); cfg = yaml.safe_load(open(a.features,'r',encoding='utf-8'))
     outdir = Path(a.outdir); outdir.mkdir(parents=True, exist_ok=True)
-    src = (cfg.get('sentiment',{}) or {}).get('source','').lower()
-    if src != 'multi': print("features: source!=multi (nessuna azione sul sentiment in questa patch)")
+    if (cfg.get('sentiment',{}) or {}).get('source','').lower() != 'multi':
+        print("features: source!=multi (no sentiment action)")
     reg = pd.DataFrame(columns=['Date','risk_on'])
     if cfg.get('regime',{}).get('enabled',False):
         pair = cfg['regime'].get('credit_risk_ratio',['HYG','IEF'])
