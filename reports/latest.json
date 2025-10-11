@@ -1,49 +1,49 @@
 {
-  "ts": "2025-10-10T17:30:30.725186Z",
+  "ts": "2025-10-11T16:33:18.580028Z",
   "kpis": {
-    "Sharpe": -0.08490637769620059,
-    "MaxDD": -0.07227611733613626,
+    "Sharpe": -0.09163415187323039,
+    "MaxDD": -0.07285421645756274,
     "Calmar": NaN,
-    "ProfitFactor": 0.9783181715968337,
+    "ProfitFactor": 0.9765333147289745,
     "CAGR_sim": NaN
   },
   "wf": {
     "windows": [
       {
-        "Sharpe": -0.9820515375942168,
-        "MaxDD": -0.07177688931139403,
+        "Sharpe": -1.0039455454997248,
+        "MaxDD": -0.07306724053888003,
         "Calmar": 0.0,
-        "ProfitFactor": 0.7899704588713216,
+        "ProfitFactor": 0.7852211903639031,
         "CAGR_sim": NaN,
         "window": "WF-2022",
         "test_start": "2022-01-01",
         "test_end": "2022-12-31"
       },
       {
-        "Sharpe": 1.008210967959586,
-        "MaxDD": -0.013411661468349045,
+        "Sharpe": 0.9907377211165532,
+        "MaxDD": -0.01357787664731036,
         "Calmar": 0.0,
-        "ProfitFactor": 1.2547573740173124,
+        "ProfitFactor": 1.2516292588175353,
         "CAGR_sim": NaN,
         "window": "WF-2023",
         "test_start": "2023-01-01",
         "test_end": "2023-12-31"
       },
       {
-        "Sharpe": 0.14868144474588083,
-        "MaxDD": -0.024787956147196755,
+        "Sharpe": 0.1444064424085013,
+        "MaxDD": -0.025027482733968265,
         "Calmar": 0.0,
-        "ProfitFactor": 1.0364690430969627,
+        "ProfitFactor": 1.0357277449767255,
         "CAGR_sim": NaN,
         "window": "WF-2024",
         "test_start": "2024-01-01",
         "test_end": "2024-12-31"
       },
       {
-        "Sharpe": 0.11247586620535853,
-        "MaxDD": -0.054205225441459004,
+        "Sharpe": 0.051773234028824104,
+        "MaxDD": -0.05430864615849573,
         "Calmar": 0.0,
-        "ProfitFactor": 1.0479790062957135,
+        "ProfitFactor": 1.0218390467405065,
         "CAGR_sim": NaN,
         "window": "WF-2025YTD",
         "test_start": "2025-01-01",
@@ -55,62 +55,62 @@
       "calmar_mean": 0.0,
       "calmar_std": 0.0,
       "calmar_cov_pct": 0.0,
-      "sharpe_mean": 0.07182918532915215,
-      "maxdd_mean": -0.04104543309209971,
-      "profit_factor_mean": 1.0322939705703276
+      "sharpe_mean": 0.04574296301353846,
+      "maxdd_mean": -0.0414953115196636,
+      "profit_factor_mean": 1.0236043102246677
     }
   },
   "guardrails": {
     "status": "RED",
     "issues": [
-      "Sharpe<0.3 (got -0.085)",
+      "Sharpe<0.3 (got -0.092)",
       "ProfitFactor<1.1 (got 0.98)"
     ],
     "kpis": {
-      "Sharpe": -0.08490637769620059,
-      "MaxDD": -0.07227611733613626,
+      "Sharpe": -0.09163415187323039,
+      "MaxDD": -0.07285421645756274,
       "Calmar": NaN,
-      "ProfitFactor": 0.9783181715968337,
+      "ProfitFactor": 0.9765333147289745,
       "CAGR_sim": NaN,
-      "_EquityDD_Fallback": 0.07227611733613624,
-      "MaxDD_Pct": 0.07227611733613624,
+      "_EquityDD_Fallback": 0.0728542164575627,
+      "MaxDD_Pct": 0.0728542164575627,
       "WF": {
         "windows": [
           {
-            "Sharpe": -0.9820515375942168,
-            "MaxDD": -0.07177688931139403,
+            "Sharpe": -1.0039455454997248,
+            "MaxDD": -0.07306724053888003,
             "Calmar": 0.0,
-            "ProfitFactor": 0.7899704588713216,
+            "ProfitFactor": 0.7852211903639031,
             "CAGR_sim": NaN,
             "window": "WF-2022",
             "test_start": "2022-01-01",
             "test_end": "2022-12-31"
           },
           {
-            "Sharpe": 1.008210967959586,
-            "MaxDD": -0.013411661468349045,
+            "Sharpe": 0.9907377211165532,
+            "MaxDD": -0.01357787664731036,
             "Calmar": 0.0,
-            "ProfitFactor": 1.2547573740173124,
+            "ProfitFactor": 1.2516292588175353,
             "CAGR_sim": NaN,
             "window": "WF-2023",
             "test_start": "2023-01-01",
             "test_end": "2023-12-31"
           },
           {
-            "Sharpe": 0.14868144474588083,
-            "MaxDD": -0.024787956147196755,
+            "Sharpe": 0.1444064424085013,
+            "MaxDD": -0.025027482733968265,
             "Calmar": 0.0,
-            "ProfitFactor": 1.0364690430969627,
+            "ProfitFactor": 1.0357277449767255,
             "CAGR_sim": NaN,
             "window": "WF-2024",
             "test_start": "2024-01-01",
             "test_end": "2024-12-31"
           },
           {
-            "Sharpe": 0.11247586620535853,
-            "MaxDD": -0.054205225441459004,
+            "Sharpe": 0.051773234028824104,
+            "MaxDD": -0.05430864615849573,
             "Calmar": 0.0,
-            "ProfitFactor": 1.0479790062957135,
+            "ProfitFactor": 1.0218390467405065,
             "CAGR_sim": NaN,
             "window": "WF-2025YTD",
             "test_start": "2025-01-01",
@@ -122,9 +122,9 @@
           "calmar_mean": 0.0,
           "calmar_std": 0.0,
           "calmar_cov_pct": 0.0,
-          "sharpe_mean": 0.07182918532915215,
-          "maxdd_mean": -0.04104543309209971,
-          "profit_factor_mean": 1.0322939705703276
+          "sharpe_mean": 0.04574296301353846,
+          "maxdd_mean": -0.0414953115196636,
+          "profit_factor_mean": 1.0236043102246677
         }
       }
     }
