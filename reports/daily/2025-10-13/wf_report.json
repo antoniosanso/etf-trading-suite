@@ -1,40 +1,40 @@
 {
   "windows": [
     {
-      "Sharpe": -1.029017089915834,
-      "MaxDD": -0.07362906042094297,
+      "Sharpe": -1.0039455454997248,
+      "MaxDD": -0.07306724053888003,
       "Calmar": 0.0,
-      "ProfitFactor": 0.7802731937871412,
+      "ProfitFactor": 0.7852211903639031,
       "CAGR_sim": NaN,
       "window": "WF-2022",
       "test_start": "2022-01-01",
       "test_end": "2022-12-31"
     },
     {
-      "Sharpe": 0.966834031594601,
-      "MaxDD": -0.013581212703381862,
+      "Sharpe": 0.9907377211165532,
+      "MaxDD": -0.01357787664731036,
       "Calmar": 0.0,
-      "ProfitFactor": 1.244153775353546,
+      "ProfitFactor": 1.2516292588175353,
       "CAGR_sim": NaN,
       "window": "WF-2023",
       "test_start": "2023-01-01",
       "test_end": "2023-12-31"
     },
     {
-      "Sharpe": 0.1565081484521597,
-      "MaxDD": -0.024775693894135364,
+      "Sharpe": 0.1444064424085013,
+      "MaxDD": -0.025027482733968265,
       "Calmar": 0.0,
-      "ProfitFactor": 1.0384223941216995,
+      "ProfitFactor": 1.0357277449767255,
       "CAGR_sim": NaN,
       "window": "WF-2024",
       "test_start": "2024-01-01",
       "test_end": "2024-12-31"
     },
     {
-      "Sharpe": 0.04184877038352766,
-      "MaxDD": -0.05413838663115067,
+      "Sharpe": 0.05061775309036538,
+      "MaxDD": -0.05430864615849573,
       "Calmar": 0.0,
-      "ProfitFactor": 1.0173824193938699,
+      "ProfitFactor": 1.0213425661778976,
       "CAGR_sim": NaN,
       "window": "WF-2025YTD",
       "test_start": "2025-01-01",
@@ -46,8 +46,8 @@
     "calmar_mean": 0.0,
     "calmar_std": 0.0,
     "calmar_cov_pct": 0.0,
-    "sharpe_mean": 0.03404346512861361,
-    "maxdd_mean": -0.04153108841240272,
-    "profit_factor_mean": 1.0200579456640642
+    "sharpe_mean": 0.045454092778923774,
+    "maxdd_mean": -0.0414953115196636,
+    "profit_factor_mean": 1.0234801900840154
   }
 }
