@@ -1,0 +1,69 @@
+{
+  "status": "RED",
+  "issues": [
+    "Sharpe<0.3 (got -0.080)",
+    "ProfitFactor<1.1 (got 0.98)"
+  ],
+  "kpis": {
+    "Sharpe": -0.07970215934264102,
+    "MaxDD": -0.07279419523994468,
+    "Calmar": NaN,
+    "ProfitFactor": 0.9796664153660517,
+    "CAGR_sim": NaN,
+    "_EquityDD_Fallback": 0.07279419523994467,
+    "MaxDD_Pct": 0.07279419523994467,
+    "WF": {
+      "windows": [
+        {
+          "Sharpe": -0.9894545826396227,
+          "MaxDD": -0.0718495454236261,
+          "Calmar": 0.0,
+          "ProfitFactor": 0.7889716797212735,
+          "CAGR_sim": NaN,
+          "window": "WF-2022",
+          "test_start": "2022-01-01",
+          "test_end": "2022-12-31"
+        },
+        {
+          "Sharpe": 1.0101242133525175,
+          "MaxDD": -0.013469680795644812,
+          "Calmar": 0.0,
+          "ProfitFactor": 1.256609746717727,
+          "CAGR_sim": NaN,
+          "window": "WF-2023",
+          "test_start": "2023-01-01",
+          "test_end": "2023-12-31"
+        },
+        {
+          "Sharpe": 0.15744570150182396,
+          "MaxDD": -0.02465665750379642,
+          "Calmar": 0.0,
+          "ProfitFactor": 1.0387271321856524,
+          "CAGR_sim": NaN,
+          "window": "WF-2024",
+          "test_start": "2024-01-01",
+          "test_end": "2024-12-31"
+        },
+        {
+          "Sharpe": 0.25966469959547606,
+          "MaxDD": -0.05440199129874246,
+          "Calmar": 0.0,
+          "ProfitFactor": 1.112077671716976,
+          "CAGR_sim": NaN,
+          "window": "WF-2025YTD",
+          "test_start": "2025-01-01",
+          "test_end": "2025-12-31"
+        }
+      ],
+      "aggregates": {
+        "windows_count": 4,
+        "calmar_mean": 0.0,
+        "calmar_std": 0.0,
+        "calmar_cov_pct": 0.0,
+        "sharpe_mean": 0.10944500795254869,
+        "maxdd_mean": -0.041094468755452446,
+        "profit_factor_mean": 1.0490965575854072
+      }
+    }
+  }
+}
