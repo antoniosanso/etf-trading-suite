@@ -1,10 +1,10 @@
 {
-  "ts": "2025-10-14T17:29:03.438940Z",
+  "ts": "2025-10-15T16:36:29.167979Z",
   "kpis": {
-    "Sharpe": -0.0898423282308544,
+    "Sharpe": -0.09478957676606606,
     "MaxDD": -0.07285421645756274,
     "Calmar": NaN,
-    "ProfitFactor": 0.9769828286439222,
+    "ProfitFactor": 0.97573526274286,
     "CAGR_sim": NaN
   },
   "wf": {
@@ -40,10 +40,10 @@
         "test_end": "2024-12-31"
       },
       {
-        "Sharpe": 0.2418328458266927,
+        "Sharpe": 0.24213484783729247,
         "MaxDD": -0.05430864615849573,
         "Calmar": 0.0,
-        "ProfitFactor": 1.1037085384394967,
+        "ProfitFactor": 1.104103965146518,
         "CAGR_sim": NaN,
         "window": "WF-2025YTD",
         "test_start": "2025-01-01",
@@ -55,22 +55,22 @@
       "calmar_mean": 0.0,
       "calmar_std": 0.0,
       "calmar_cov_pct": 0.0,
-      "sharpe_mean": 0.09325786596300562,
+      "sharpe_mean": 0.09333336646565554,
       "maxdd_mean": -0.0414953115196636,
-      "profit_factor_mean": 1.0440716831494152
+      "profit_factor_mean": 1.0441705398261707
     }
   },
   "guardrails": {
     "status": "RED",
     "issues": [
-      "Sharpe<0.3 (got -0.090)",
+      "Sharpe<0.3 (got -0.095)",
       "ProfitFactor<1.1 (got 0.98)"
     ],
     "kpis": {
-      "Sharpe": -0.0898423282308544,
+      "Sharpe": -0.09478957676606606,
       "MaxDD": -0.07285421645756274,
       "Calmar": NaN,
-      "ProfitFactor": 0.9769828286439222,
+      "ProfitFactor": 0.97573526274286,
       "CAGR_sim": NaN,
       "_EquityDD_Fallback": 0.0728542164575627,
       "MaxDD_Pct": 0.0728542164575627,
@@ -107,10 +107,10 @@
             "test_end": "2024-12-31"
           },
           {
-            "Sharpe": 0.2418328458266927,
+            "Sharpe": 0.24213484783729247,
             "MaxDD": -0.05430864615849573,
             "Calmar": 0.0,
-            "ProfitFactor": 1.1037085384394967,
+            "ProfitFactor": 1.104103965146518,
             "CAGR_sim": NaN,
             "window": "WF-2025YTD",
             "test_start": "2025-01-01",
@@ -122,9 +122,9 @@
           "calmar_mean": 0.0,
           "calmar_std": 0.0,
           "calmar_cov_pct": 0.0,
-          "sharpe_mean": 0.09325786596300562,
+          "sharpe_mean": 0.09333336646565554,
           "maxdd_mean": -0.0414953115196636,
-          "profit_factor_mean": 1.0440716831494152
+          "profit_factor_mean": 1.0441705398261707
         }
       }
     }
