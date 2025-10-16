@@ -1,14 +1,18 @@
 
-# Signals config with default SMA params (fixes KeyError: 'sma_fast')
+# Signals config with SMA + ATR defaults (fixes KeyError: 'atr_period')
 strategy: "sma_crossover"
+
+# SMA params
 sma_fast: 20
 sma_slow: 50
 min_periods: 20
 
-# Optional extras used by other parts of the suite (safe defaults)
+# ATR params required by signals.py
+atr_period: 14
+
+# Other safe defaults used elsewhere
 breakout_window_days: 260
 buffer_pct: 0.3
-
 risk_per_trade_pct: 1.0
 
 output_dir: "./outputs/signals"
