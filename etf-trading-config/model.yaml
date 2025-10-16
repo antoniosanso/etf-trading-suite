@@ -2,6 +2,9 @@
 params:
   atr_pct: 1.0
   buffer_mul: 1.0
+  buffer_mult: 1.0
+  vol_z_min: -3.0
+  vol_z_max: 3.0
 
 general:
   data:
