@@ -1,43 +1,49 @@
 
-name: Backtest (Matrix) via Web Ingest
+name: Backtest via Web Ingest (definitivo)
+
 on:
   workflow_dispatch: {}
   schedule:
     - cron: "15 06 * * *"
+
 jobs:
-  backtest-matrix:
+  backtest-all:
     runs-on: ubuntu-latest
     env:
       PYTHONPATH: etf-trading-engine
-    strategy:
-      fail-fast: false
-      matrix:
-        run_id: [S0_buyhold, S1_breakout, S2_multilayer, S3_breakout_checklist]
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Install deps
         run: python -m pip install -r etf-trading-engine/requirements.txt
+
       - name: Download EOD from Yahoo
         run: |
           python etf-trading-engine/scripts/download_eod_yf.py             --universe etf-trading-config/universe.csv             --output etf-trading-engine/data/eod.csv             --start 2018-01-01             --threads 1             --sleep 1             --min_success 2
+
       - name: Sanity check
         run: python etf-trading-engine/scripts/sanity_check.py --data etf-trading-engine/data/eod.csv
-      - name: Run backtest ${{ matrix.run_id }}
+
+      - name: Run backtests (all runs in config)
         run: |
-          python etf-trading-engine/scripts/run_ci_backtest.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --run_id ${{ matrix.run_id }}             --outdir outputs/${{ matrix.run_id }}
-      - name: Walk-Forward report
+          python etf-trading-engine/scripts/run_ci_backtest.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --outdir outputs
+
+      - name: Walk-Forward report (all runs)
         run: |
-          python etf-trading-engine/scripts/walk_forward.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --windows etf-trading-config/wf_windows.yaml             --run_id ${{ matrix.run_id }}             --outdir outputs/${{ matrix.run_id }}
-      - uses: actions/upload-artifact@v4
+          python etf-trading-engine/scripts/walk_forward.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --windows etf-trading-config/wf_windows.yaml             --outdir outputs
+
+      - name: Upload artifacts (all runs)
+        uses: actions/upload-artifact@v4
         with:
-          name: kpis-${{ matrix.run_id }}
+          name: kpis-all-runs
           path: |
-            outputs/${{ matrix.run_id }}/kpis.json
-            outputs/${{ matrix.run_id }}/summary.txt
-            outputs/${{ matrix.run_id }}/equity_curve.csv
-            outputs/${{ matrix.run_id }}/wf_report.json
-            outputs/${{ matrix.run_id }}/wf_summary.txt
+            outputs/**/kpis.json
+            outputs/**/summary.txt
+            outputs/**/equity_curve.csv
+            outputs/**/wf_report.json
+            outputs/**/wf_summary.txt
           if-no-files-found: warn
