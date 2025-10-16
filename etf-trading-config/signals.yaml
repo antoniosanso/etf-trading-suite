@@ -1,5 +1,14 @@
-signals:
-  watchlist: {mode: "breakout_watchlist", window_days: 260, buffer_pct: 0.3}
-  entries_today: {mode: "breakout_candidates", buffer_pct: 0.3}
-  risk: {per_trade_risk_pct: 1.5, max_portfolio_heat_pct: 8.0}
-output: {dir: "outputs/signals"}
+
+# Signals config with default SMA params (fixes KeyError: 'sma_fast')
+strategy: "sma_crossover"
+sma_fast: 20
+sma_slow: 50
+min_periods: 20
+
+# Optional extras used by other parts of the suite (safe defaults)
+breakout_window_days: 260
+buffer_pct: 0.3
+
+risk_per_trade_pct: 1.0
+
+output_dir: "./outputs/signals"
