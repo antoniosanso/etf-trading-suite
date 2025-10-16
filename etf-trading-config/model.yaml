@@ -1,5 +1,6 @@
 params:
   atr_pct: 1.0        # default richiesto dallo script (non cambia le nostre logiche)
+  buffer_mul: 1.0
   
 general:
   data:
