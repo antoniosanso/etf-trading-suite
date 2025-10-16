@@ -1,0 +1,21 @@
+
+name: Trading Suite — Unified Daily
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "15 16 * * *"
+jobs:
+  unified:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: etf-trading-engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: python -m pip install -r etf-trading-engine/requirements.txt
+      - name: Download EOD
+        run: |
+          python etf-trading-engine/scripts/download_eod_yf.py             --universe ./etf-trading-config/universe.csv             --output ./etf-trading-engine/data/eod.csv             --start 2018-01-01             --threads 1             --sleep 1             --min_success 1
