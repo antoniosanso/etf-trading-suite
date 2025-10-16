@@ -1,5 +1,5 @@
 
-name: Backtest via Web Ingest (runtime-config)
+name: Backtest via Web Ingest (runtime per-run params)
 
 on:
   workflow_dispatch: {}
@@ -26,7 +26,7 @@ jobs:
       - name: Sanity check
         run: python etf-trading-engine/scripts/sanity_check.py --data etf-trading-engine/data/eod.csv
 
-      - name: Build runtime config with required params
+      - name: Build runtime config (inject params into each run)
         run: |
           python - << 'PY'
           import yaml, os, sys
@@ -34,17 +34,28 @@ jobs:
           dst = "etf-trading-config/model_runtime.yaml"
           with open(src, "r", encoding="utf-8") as f:
               cfg = yaml.safe_load(f) or {}
-          # top-level params
-          params = cfg.get("params") or {}
+          # ensure top-level
+          params = (cfg.get("params") or {})
           params.setdefault("atr_pct", 1.0)
           params.setdefault("buffer_mul", 1.0)
           cfg["params"] = params
-          # write runtime file
+          # ensure inside each run
+          runs = cfg.get("runs") or {}
+          for k, v in list(runs.items()):
+              if isinstance(v, dict):
+                  pr = v.get("params") or {}
+                  pr.setdefault("atr_pct", params["atr_pct"])
+                  pr.setdefault("buffer_mul", params["buffer_mul"])
+                  v["params"] = pr
+                  runs[k] = v
+          cfg["runs"] = runs
           with open(dst, "w", encoding="utf-8") as f:
               yaml.safe_dump(cfg, f, sort_keys=False, allow_unicode=True)
-          print("WROTE:", dst)
+          print("=== RUNTIME CONFIG HEAD ===")
           with open(dst,"r",encoding="utf-8") as f:
-              print(f.read())
+              for i, line in enumerate(f):
+                  print(line.rstrip())
+                  if i>120: break
           PY
 
       - name: Run backtests (using runtime config)
