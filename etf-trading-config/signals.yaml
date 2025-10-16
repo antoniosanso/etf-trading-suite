@@ -1,18 +1,19 @@
 
-# Signals config with SMA + ATR defaults (fixes KeyError: 'atr_period')
-strategy: "sma_crossover"
+# Signals config — SMA + ATR + Breakout defaults
+strategy: "sma_crossover"   # puoi lasciarla: i campi breakout servono a Unified
 
 # SMA params
 sma_fast: 20
 sma_slow: 50
 min_periods: 20
 
-# ATR params required by signals.py
+# ATR params
 atr_period: 14
 
-# Other safe defaults used elsewhere
-breakout_window_days: 260
-buffer_pct: 0.3
-risk_per_trade_pct: 1.0
+# Breakout / Donchian (richiesti dal job Unified)
+breakout_lookback: 260      # ~52 settimane
+breakout_buffer_pct: 0.3    # piccolo buffer
 
+# Altri default sicuri
+risk_per_trade_pct: 1.0
 output_dir: "./outputs/signals"
