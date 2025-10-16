@@ -19,5 +19,10 @@ breakout_buffer_pct: 0.3
 min_adv20: 0
 min_volume: 0
 
+rank_weights:
+  mom252: 0.6
+  mom6: 0.4
+
+
 risk_per_trade_pct: 1.0
 output_dir: "./outputs/signals"
