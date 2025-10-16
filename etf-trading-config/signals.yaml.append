@@ -1,0 +1,3 @@
+
+# Add safe default for top_n to avoid KeyError after RankScore fix
+top_n: 10
