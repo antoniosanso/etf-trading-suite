@@ -1,6 +1,6 @@
 params:
-  atr_pct: 1.0        # default richiesto dallo script (non cambia le nostre logiche)
-  buffer_mul: 1.0
+  atr_pct: 1.0        # richiesto dal motore
+  buffer_mul: 1.0     # richiesto dal motore (moltiplicatore del buffer)
   
 general:
   data:
