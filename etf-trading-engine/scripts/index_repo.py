@@ -3,10 +3,19 @@
 """
 index_repo.py — Build full repo index & summaries; write docs/CONTENT_INDEX.md and JSON artifacts.
 """
-import os, sys, argparse, json, base64, mimetypes, re, requests
+import os
+import sys
+import argparse
+import json
+import base64
+import mimetypes
+import re
 from typing import List, Dict, Any
 
+import requests
+
 G = "https://api.github.com"
+
 
 def gh_get(url: str, token: str | None) -> requests.Response:
     headers = {"User-Agent": "repo-indexer/1.0"}
@@ -16,20 +25,28 @@ def gh_get(url: str, token: str | None) -> requests.Response:
     r.raise_for_status()
     return r
 
+
 def build_raw_url(owner: str, repo: str, ref: str, path: str) -> str:
-    ref_part = f"refs/heads/{ref}" if not re.fullmatch(r\"[0-9a-f]{40}\", ref) else ref
+    # If 'ref' is not a 40-char SHA, assume it's a branch name and use refs/heads/<ref>
+    ref_part = f"refs/heads/{ref}" if not re.fullmatch(r"[0-9a-f]{40}", ref) else ref
     return f"https://raw.githubusercontent.com/{owner}/{repo}/{ref_part}/{path}"
+
 
 def is_textual(path: str, size: int, textual_exts: set[str]) -> bool:
     ext = os.path.splitext(path.lower())[1]
     if ext in textual_exts:
         return True
-    binary_exts = {".png",".jpg",".jpeg",".gif",".pdf",".zip",".gz",".xz",".7z",".rar",".mp3",".mp4",".wav",".ogg",".webp",".ico"}
-    return ext not in binary_exts and size <= 1024*1024
+    binary_exts = {
+        ".png", ".jpg", ".jpeg", ".gif", ".pdf", ".zip", ".gz", ".xz",
+        ".7z", ".rar", ".mp3", ".mp4", ".wav", ".ogg", ".webp", ".ico"
+    }
+    return ext not in binary_exts and size <= 1024 * 1024
+
 
 def head_extract(text: str, max_lines: int = 30) -> str:
     lines = text.splitlines()
-    return "\\n".join(lines[:max_lines])
+    return "\n".join(lines[:max_lines])
+
 
 def extract_headings_md(text: str, max_items: int = 20) -> List[str]:
     heads = []
@@ -39,6 +56,7 @@ def extract_headings_md(text: str, max_items: int = 20) -> List[str]:
         if len(heads) >= max_items:
             break
     return heads
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -53,6 +71,7 @@ def main():
     token = os.environ.get("GITHUB_TOKEN", "").strip() or None
     owner, repo = args.repo.split("/", 1)
 
+    # Fetch tree listing (recursive)
     try:
         r = gh_get(f"{G}/repos/{owner}/{repo}/git/trees/{args.ref}?recursive=1", token)
     except requests.HTTPError:
@@ -60,7 +79,7 @@ def main():
     data = r.json()
     tree = data.get("tree", [])
 
-    textual_exts = set([e.strip().lower() for e in args.summarize_exts.split(",") if e.strip()])
+    textual_exts = {e.strip().lower() for e in args.summarize_exts.split(",") if e.strip()}
     files_meta: List[Dict[str, Any]] = []
     summaries: Dict[str, Any] = {}
 
@@ -69,34 +88,33 @@ def main():
             continue
         path = node["path"]
         size = node.get("size", 0)
-        sha  = node.get("sha", "")
-        raw  = build_raw_url(owner, repo, args.ref, path)
+        sha = node.get("sha", "")
+        raw = build_raw_url(owner, repo, args.ref, path)
         mime, _ = mimetypes.guess_type(path)
-        meta = {
+        files_meta.append({
             "path": path,
             "size": size,
             "sha": sha,
             "raw_url": raw,
             "blob_url": f"https://github.com/{owner}/{repo}/blob/{args.ref}/{path}",
             "mime": mime or "text/plain"
-        }
-        files_meta.append(meta)
+        })
 
         if is_textual(path, size, textual_exts) and size <= args.max_bytes:
             try:
                 cr = gh_get(f"{G}/repos/{owner}/{repo}/contents/{path}?ref={args.ref}", token)
                 cj = cr.json()
-                content_b64 = cj.get("content", "")
-                if cj.get("encoding") == "base64" and content_b64:
-                    text = base64.b64decode(content_b64).decode("utf-8", errors="replace")
+                if cj.get("encoding") == "base64" and cj.get("content"):
+                    text = base64.b64decode(cj["content"]).decode("utf-8", errors="replace")
                     head = head_extract(text, max_lines=40)
                     heads = extract_headings_md(text, max_items=20) if path.lower().endswith(".md") else []
                     summaries[path] = {
-                        "lines": text.count("\\n")+1,
+                        "lines": text.count("\n") + 1,
                         "head": head,
                         "headings": heads
                     }
             except Exception:
+                # best-effort
                 pass
 
     os.makedirs(args.outdir, exist_ok=True)
@@ -106,29 +124,31 @@ def main():
         json.dump(summaries, f, ensure_ascii=False, indent=2)
 
     rows = []
-    rows.append(f"# Repository Content Index — {args.repo}@{args.ref}\\n")
-    rows.append("Questa pagina è generata automaticamente dal workflow **Content Indexer**.\\n")
-    rows.append("| Path | Size | SHA (short) | Link | Raw |\\n|---|---:|---|---|---|\\n")
+    rows.append(f"# Repository Content Index — {args.repo}@{args.ref}\n")
+    rows.append("Questa pagina è generata automaticamente dal workflow **Content Indexer**.\n")
+    rows.append("| Path | Size | SHA (short) | Link | Raw |\n|---|---:|---|---|---|\n")
     for m in files_meta:
         sha_short = m["sha"][:8]
         rows.append(f"| `{m['path']}` | {m['size']:,} | `{sha_short}` | [blob]({m['blob_url']}) | [raw]({m['raw_url']}) |")
-    rows.append("\\n## Estratti e Headings\\n")
+    rows.append("\n## Estratti e Headings\n")
     for p, s in list(summaries.items())[:50]:
         rows.append(f"### `{p}`")
         if s.get("headings"):
-            rows.append("\\n".join(s["headings"]))
-        head = s.get("head","").strip()
+            rows.append("\n".join(s["headings"]))
+        head = s.get("head", "").strip()
         if head:
-            rows.append("\\n```text\\n" + head[:2000] + "\\n```\\n")
+            rows.append("\n```text\n" + head[:2000] + "\n```\n")
 
+    os.makedirs(os.path.dirname(args.docs), exist_ok=True)
     with open(args.docs, "w", encoding="utf-8") as f:
-        f.write("\\n".join(rows))
+        f.write("\n".join(rows))
 
     print(f"Indexed {len(files_meta)} files. Wrote {args.outdir}/repo_index.json, summaries.json and {args.docs}")
+
 
 if __name__ == "__main__":
     try:
         sys.exit(main())
     except Exception as e:
-        sys.stderr.write(f"[ERROR] {e}\\n")
+        sys.stderr.write(f"[ERROR] {e}\n")
         sys.exit(2)
