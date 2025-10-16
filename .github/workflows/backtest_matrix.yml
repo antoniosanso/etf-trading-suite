@@ -1,11 +1,9 @@
 
-name: Backtest via Web Ingest (definitivo)
-
+name: Backtest via Web Ingest (debug params)
 on:
   workflow_dispatch: {}
   schedule:
     - cron: "15 06 * * *"
-
 jobs:
   backtest-all:
     runs-on: ubuntu-latest
@@ -13,31 +11,39 @@ jobs:
       PYTHONPATH: etf-trading-engine
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install deps
-        run: python -m pip install -r etf-trading-engine/requirements.txt
-
+        run: |
+          python -m pip install -r etf-trading-engine/requirements.txt pyyaml
+          python - << 'PY'
+          import yaml, os
+          p='etf-trading-config/model.yaml'
+          print('yaml present:', os.path.exists(p), 'size:', os.path.getsize(p) if os.path.exists(p) else 0)
+          with open(p,'r',encoding='utf-8') as f:
+              cfg=yaml.safe_load(f)
+          print('top-level keys:', list(cfg.keys()))
+          print('params:', cfg.get('params'))
+          print('params.buffer_mul:', cfg.get('params',{}).get('buffer_mul'))
+          PY
+      - name: Show config header
+        run: |
+          echo "----- HEAD of etf-trading-config/model.yaml -----"
+          sed -n '1,60p' etf-trading-config/model.yaml
+          echo "----- END HEAD -----"
       - name: Download EOD from Yahoo
         run: |
           python etf-trading-engine/scripts/download_eod_yf.py             --universe etf-trading-config/universe.csv             --output etf-trading-engine/data/eod.csv             --start 2018-01-01             --threads 1             --sleep 1             --min_success 2
-
       - name: Sanity check
         run: python etf-trading-engine/scripts/sanity_check.py --data etf-trading-engine/data/eod.csv
-
       - name: Run backtests (all runs in config)
         run: |
           python etf-trading-engine/scripts/run_ci_backtest.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --outdir outputs
-
       - name: Walk-Forward report (all runs)
         run: |
           python etf-trading-engine/scripts/walk_forward.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --windows etf-trading-config/wf_windows.yaml             --outdir outputs
-
-      - name: Upload artifacts (all runs)
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: kpis-all-runs
           path: |
