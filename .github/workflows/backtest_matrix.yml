@@ -1,5 +1,5 @@
 
-name: Backtest via Web Ingest (auto-fix)
+name: Backtest via Web Ingest (final)
 
 on:
   workflow_dispatch: {}
@@ -28,24 +28,35 @@ jobs:
       - name: Sanity check
         run: python etf-trading-engine/scripts/sanity_check.py --data etf-trading-engine/data/eod.csv
 
-      - name: Ensure required params in config
+      - name: Ensure required params (top-level and per-run)
         run: |
           python - << 'PY'
-          import yaml, os
-          p = "etf-trading-config/model.yaml"
-          with open(p, "r", encoding="utf-8") as f:
-              cfg = yaml.safe_load(f) or {}
-          cfg.setdefault("params", {})
-          cfg["params"].setdefault("atr_pct", 1.0)
-          cfg["params"].setdefault("buffer_mul", 1.0)
-          with open(p, "w", encoding="utf-8") as f:
-              yaml.safe_dump(cfg, f, sort_keys=False, allow_unicode=True)
-          print("OK: params.atr_pct =", cfg["params"]["atr_pct"], 
-                "| params.buffer_mul =", cfg["params"]["buffer_mul"])
+          import yaml, os, sys
+          p="etf-trading-config/model.yaml"
+          with open(p,"r",encoding="utf-8") as f:
+              cfg=yaml.safe_load(f) or {}
+          # ensure top-level
+          cfg.setdefault("params",{})
+          cfg["params"].setdefault("atr_pct",1.0)
+          cfg["params"].setdefault("buffer_mul",1.0)
+          # ensure per-run
+          runs=cfg.get("runs",{}) or {}
+          for k,v in runs.items():
+              if not isinstance(v,dict): 
+                  continue
+              v.setdefault("params",{})
+              v["params"].setdefault("atr_pct", cfg["params"]["atr_pct"])
+              v["params"].setdefault("buffer_mul", cfg["params"]["buffer_mul"])
+          cfg["runs"]=runs
+          with open(p,"w",encoding="utf-8") as f:
+              yaml.safe_dump(cfg,f,sort_keys=False,allow_unicode=True)
+          print("OK: injected params at top-level and per-run.")
+          for k in runs.keys():
+              print(" run",k,"params:",runs[k].get("params"))
           PY
 
       - name: Show config header (sanity)
-        run: sed -n '1,60p' etf-trading-config/model.yaml
+        run: sed -n '1,120p' etf-trading-config/model.yaml
 
       - name: Run backtests (all runs in config)
         run: |
