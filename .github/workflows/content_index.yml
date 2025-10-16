@@ -1,0 +1,50 @@
+name: Content Indexer
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+  schedule:
+    - cron: "40 6 * * *"
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+jobs:
+  index-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+        python -m pip install --upgrade pip
+        pip install requests
+      - name: Build repo content index
+        run: |
+          python etf-trading-engine/scripts/index_repo.py \
+            --repo ${{ github.repository }} \
+            --ref ${{ github.ref_name }} \
+            --outdir outputs/index \
+            --docs docs/CONTENT_INDEX.md
+      - name: Commit docs
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(docs): update CONTENT_INDEX.md (automated)"
+          file_pattern: docs/CONTENT_INDEX.md
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-index
+          path: |
+            outputs/index/repo_index.json
+            outputs/index/summaries.json
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
