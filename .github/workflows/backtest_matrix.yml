@@ -25,7 +25,7 @@ jobs:
 
       - name: Download EOD from Yahoo
         run: |
-          python etf-trading-engine/scripts/download_eod_yf.py             --universe etf-trading-config/universe.csv             --output etf-trading-engine/data/eod.csv             --start 2018-01-01             --threads 4
+          python etf-trading-engine/scripts/download_eod_yf.py             --universe etf-trading-config/universe.csv             --output etf-trading-engine/data/eod.csv             --start 2018-01-01             --threads 1             --sleep 1             --min_success 5
 
       - name: Sanity check
         run: python etf-trading-engine/scripts/sanity_check.py --data etf-trading-engine/data/eod.csv
