@@ -1,11 +1,10 @@
+
 # ==== CONFIGURAZIONE BACKTEST (TNOW.MI, XAIX.MI) ====
 
-# Parametri globali richiesti dal motore
 params:
-  atr_pct: 1.0        # placeholder richiesto dallo script
-  buffer_mul: 1.0     # moltiplicatore di sicurezza per i buffer
+  atr_pct: 1.0
+  buffer_mul: 1.0
 
-# Impostazioni generali (ingest web Yahoo; dati dal 2018)
 general:
   data:
     source: "web_yahoo"
@@ -19,17 +18,13 @@ general:
     trimmed_cov_ignore_extremes: 1
     cov_threshold_pct: 30.0
 
-# DEFINIZIONE DEI RUN (saranno eseguiti tutti in sequenza)
 runs:
 
-  # -----------------------------
-  # S0 — Buy & Hold (trailing ampio)
-  # -----------------------------
   S0_buyhold:
     description: "Buy & Hold con trailing ampio (core)"
     universe: "etf-trading-config/universe.csv"
     entry:
-      mode: "market_open_next"          # entra alla prima barra disponibile
+      mode: "market_open_next"
     exit:
       trailing_pct_by_ticker:
         TNOW.MI: 12.0
@@ -43,9 +38,6 @@ runs:
       maxdd_abs_max_pct: 100.0
       wf_calmar_cov_max_pct: 100.0
 
-  # -----------------------------
-  # S1 — Breakout secco
-  # -----------------------------
   S1_breakout:
     description: "Breakout 52w +0,3% con SL -7% e TP +14%"
     universe: "etf-trading-config/universe.csv"
@@ -66,9 +58,6 @@ runs:
       maxdd_abs_max_pct: 35.0
       wf_calmar_cov_max_pct: 30.0
 
-  # -----------------------------
-  # S2 — Multilayer (Core scalato + Tattico S1)
-  # -----------------------------
   S2_multilayer:
     description: "Core (scalato) + Tattico (S1)"
     universe: "etf-trading-config/universe.csv"
@@ -102,9 +91,6 @@ runs:
       maxdd_abs_max_pct: 35.0
       wf_calmar_cov_max_pct: 30.0
 
-  # -----------------------------
-  # S3 — Breakout + Checklist (filtri)
-  # -----------------------------
   S3_breakout_checklist:
     description: "Breakout 52w + filtri (NAV P/D, spread, stagionalità, regime, breadth)"
     universe: "etf-trading-config/universe.csv"
@@ -118,12 +104,12 @@ runs:
       mode: "percent"
       value_pct: 14.0
     filters:
-      nav_premium_abs_max_pct: 0.5          # |Premium/Discount| massimo
-      spread_median_max_pct: 0.25            # spread mediano massimo
-      seasonality_months_on: [11, 12, 1, 2, 3, 4]  # Nov–Apr
+      nav_premium_abs_max_pct: 0.5
+      spread_median_max_pct: 0.25
+      seasonality_months_on: [11, 12, 1, 2, 3, 4]
       regime:
-        market_above_ma200: "SWDA.MI"        # risk-on di mercato
-        sector_above_ma200: "IXN"            # IT in regime positivo
+        market_above_ma200: "SWDA.MI"
+        sector_above_ma200: "IXN"
       breadth:
         proxy: "QQQ"
         rule: "close_above_ma"
