@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-etf-trading-engine/scripts/fetch_universe.py
-Drop-in utility to fetch and validate the ETF universe from a public GitHub repo.
+fetch_universe.py — Fetch & validate the ETF universe from a public GitHub repo.
+Outputs:
+- outputs/universe/universe_snapshot.csv
+- outputs/universe/universe_snapshot.json
 """
-import os, sys, csv, json, argparse
+import os, sys, csv, json, argparse, requests
 from typing import Optional, Tuple, List
-import requests
 
 def _build_raw_url(repo: str, path: str, ref: str = "refs/heads/main") -> str:
     return f"https://raw.githubusercontent.com/{repo}/{ref}/{path}"
@@ -31,7 +32,7 @@ def get_universe_text(repo: Optional[str], path: Optional[str], ref: str, raw_ur
     code, content = _fetch(url, token)
     if code == 200:
         return content.decode("utf-8", errors="replace")
-    # Fallback: GitHub Contents API (handles alt refs/default branches)
+    # Fallback: GitHub Contents API
     api_url = f"https://api.github.com/repos/{repo}/contents/{path}?ref={ref}"
     code, content = _fetch(api_url, token)
     if code == 200:
@@ -62,16 +63,18 @@ def parse_universe_csv(text: str) -> List[str]:
 
 def write_snapshot(tickers: List[str], out_csv: str, out_json: str):
     os.makedirs(os.path.dirname(out_csv), exist_ok=True)
+    uniq = list(dict.fromkeys(tickers))
+    dup = len(tickers) - len(uniq)
     with open(out_csv, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        for t in tickers:
+        for t in uniq:
             w.writerow([t])
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump({
             "total_rows": len(tickers),
-            "unique_tickers": len(list(dict.fromkeys(tickers))),
-            "duplicate_rows": len(tickers) - len(list(dict.fromkeys(tickers))),
-            "tickers": list(dict.fromkeys(tickers))
+            "unique_tickers": len(uniq),
+            "duplicate_rows": dup,
+            "tickers": uniq
         }, f, ensure_ascii=False, indent=2)
 
 def main():
@@ -90,7 +93,6 @@ def main():
     out_json = os.path.join(args.outdir, "universe_snapshot.json")
     write_snapshot(tickers, out_csv, out_json)
 
-    # Human log
     uniq = list(dict.fromkeys(tickers))
     dup = len(tickers) - len(uniq)
     print("Universe summary")
