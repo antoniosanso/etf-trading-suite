@@ -1,10 +1,8 @@
 
-name: Backtest via Web Ingest (final)
+name: Backtest via Web Ingest (runtime-config)
 
 on:
   workflow_dispatch: {}
-  schedule:
-    - cron: "15 06 * * *"
 
 jobs:
   backtest-all:
@@ -28,43 +26,34 @@ jobs:
       - name: Sanity check
         run: python etf-trading-engine/scripts/sanity_check.py --data etf-trading-engine/data/eod.csv
 
-      - name: Ensure required params (top-level and per-run)
+      - name: Build runtime config with required params
         run: |
           python - << 'PY'
           import yaml, os, sys
-          p="etf-trading-config/model.yaml"
-          with open(p,"r",encoding="utf-8") as f:
-              cfg=yaml.safe_load(f) or {}
-          # ensure top-level
-          cfg.setdefault("params",{})
-          cfg["params"].setdefault("atr_pct",1.0)
-          cfg["params"].setdefault("buffer_mul",1.0)
-          # ensure per-run
-          runs=cfg.get("runs",{}) or {}
-          for k,v in runs.items():
-              if not isinstance(v,dict): 
-                  continue
-              v.setdefault("params",{})
-              v["params"].setdefault("atr_pct", cfg["params"]["atr_pct"])
-              v["params"].setdefault("buffer_mul", cfg["params"]["buffer_mul"])
-          cfg["runs"]=runs
-          with open(p,"w",encoding="utf-8") as f:
-              yaml.safe_dump(cfg,f,sort_keys=False,allow_unicode=True)
-          print("OK: injected params at top-level and per-run.")
-          for k in runs.keys():
-              print(" run",k,"params:",runs[k].get("params"))
+          src = "etf-trading-config/model.yaml"
+          dst = "etf-trading-config/model_runtime.yaml"
+          with open(src, "r", encoding="utf-8") as f:
+              cfg = yaml.safe_load(f) or {}
+          # top-level params
+          params = cfg.get("params") or {}
+          params.setdefault("atr_pct", 1.0)
+          params.setdefault("buffer_mul", 1.0)
+          cfg["params"] = params
+          # write runtime file
+          with open(dst, "w", encoding="utf-8") as f:
+              yaml.safe_dump(cfg, f, sort_keys=False, allow_unicode=True)
+          print("WROTE:", dst)
+          with open(dst,"r",encoding="utf-8") as f:
+              print(f.read())
           PY
 
-      - name: Show config header (sanity)
-        run: sed -n '1,120p' etf-trading-config/model.yaml
-
-      - name: Run backtests (all runs in config)
+      - name: Run backtests (using runtime config)
         run: |
-          python etf-trading-engine/scripts/run_ci_backtest.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --outdir outputs
+          python etf-trading-engine/scripts/run_ci_backtest.py             --config etf-trading-config/model_runtime.yaml             --data etf-trading-engine/data/eod.csv             --outdir outputs
 
       - name: Walk-Forward report (all runs)
         run: |
-          python etf-trading-engine/scripts/walk_forward.py             --config etf-trading-config/model.yaml             --data etf-trading-engine/data/eod.csv             --windows etf-trading-config/wf_windows.yaml             --outdir outputs
+          python etf-trading-engine/scripts/walk_forward.py             --config etf-trading-config/model_runtime.yaml             --data etf-trading-engine/data/eod.csv             --windows etf-trading-config/wf_windows.yaml             --outdir outputs
 
       - name: Upload artifacts (all runs)
         uses: actions/upload-artifact@v4
