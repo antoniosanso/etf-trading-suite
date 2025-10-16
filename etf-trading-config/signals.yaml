@@ -1,19 +1,23 @@
 
-# Signals config — SMA + ATR + Breakout defaults
-strategy: "sma_crossover"   # puoi lasciarla: i campi breakout servono a Unified
+# Signals config — SMA + ATR + Breakout + Liquidity defaults
+strategy: "sma_crossover"
 
-# SMA params
+# SMA
 sma_fast: 20
 sma_slow: 50
 min_periods: 20
 
-# ATR params
+# ATR
 atr_period: 14
 
-# Breakout / Donchian (richiesti dal job Unified)
-breakout_lookback: 260      # ~52 settimane
-breakout_buffer_pct: 0.3    # piccolo buffer
+# Breakout / Donchian
+breakout_lookback: 260
+breakout_buffer_pct: 0.3
 
-# Altri default sicuri
+# Liquidity filters (required by signals.py)
+# Metti a 0 per non bloccare i segnali in mercati poco liquidi
+min_adv20: 0
+min_volume: 0
+
 risk_per_trade_pct: 1.0
 output_dir: "./outputs/signals"
