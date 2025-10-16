@@ -1,6 +1,4 @@
 
-# ==== CONFIGURAZIONE BACKTEST (TNOW.MI, XAIX.MI) ====
-
 params:
   atr_pct: 1.0
   buffer_mul: 1.0
@@ -23,99 +21,47 @@ runs:
   S0_buyhold:
     description: "Buy & Hold con trailing ampio (core)"
     universe: "etf-trading-config/universe.csv"
-    entry:
-      mode: "market_open_next"
+    entry: {mode: "market_open_next"}
     exit:
-      trailing_pct_by_ticker:
-        TNOW.MI: 12.0
-        XAIX.MI: 15.0
-        default: 12.0
+      trailing_pct_by_ticker: {TNOW.MI: 12.0, XAIX.MI: 15.0, default: 12.0}
     stop_loss: null
     take_profit: null
-    guardrails:
-      sharpe_min: -999.0
-      profit_factor_min: 0.0
-      maxdd_abs_max_pct: 100.0
-      wf_calmar_cov_max_pct: 100.0
+    guardrails: {sharpe_min: -999.0, profit_factor_min: 0.0, maxdd_abs_max_pct: 100.0, wf_calmar_cov_max_pct: 100.0}
 
   S1_breakout:
     description: "Breakout 52w +0,3% con SL -7% e TP +14%"
     universe: "etf-trading-config/universe.csv"
-    entry:
-      mode: "breakout_52w"
-      buffer_pct: 0.3
-    stop_loss:
-      mode: "percent"
-      value_pct: 7.0
-    take_profit:
-      mode: "percent"
-      value_pct: 14.0
-    exit:
-      break_even_after_tp1: false
-    guardrails:
-      sharpe_min: 0.30
-      profit_factor_min: 1.10
-      maxdd_abs_max_pct: 35.0
-      wf_calmar_cov_max_pct: 30.0
+    entry: {mode: "breakout_52w", buffer_pct: 0.3}
+    stop_loss: {mode: "percent", value_pct: 7.0}
+    take_profit: {mode: "percent", value_pct: 14.0}
+    exit: {break_even_after_tp1: false}
+    guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 35.0, wf_calmar_cov_max_pct: 30.0}
 
   S2_multilayer:
     description: "Core (scalato) + Tattico (S1)"
     universe: "etf-trading-config/universe.csv"
     core:
       scaling_tranches:
-        - mode: "market_now"          # ~33%
-          weight_pct: 33.0
-        - mode: "pullback_dma"        # buy limit su 20/50DMA, ~33%
-          dmas: [20, 50]
-          weight_pct: 33.0
-        - mode: "breakout_52w"        # ~34%
-          buffer_pct: 0.3
-          weight_pct: 34.0
-      trailing_pct_by_ticker:
-        TNOW.MI: 12.0
-        XAIX.MI: 15.0
-        default: 12.0
+        - {mode: "market_now", weight_pct: 33.0}
+        - {mode: "pullback_dma", dmas: [20, 50], weight_pct: 33.0}
+        - {mode: "breakout_52w", buffer_pct: 0.3, weight_pct: 34.0}
+      trailing_pct_by_ticker: {TNOW.MI: 12.0, XAIX.MI: 15.0, default: 12.0}
     tactical:
-      entry:
-        mode: "breakout_52w"
-        buffer_pct: 0.3
-      stop_loss:
-        mode: "percent"
-        value_pct: 7.0
-      take_profit:
-        mode: "percent"
-        value_pct: 14.0
-    guardrails:
-      sharpe_min: 0.30
-      profit_factor_min: 1.10
-      maxdd_abs_max_pct: 35.0
-      wf_calmar_cov_max_pct: 30.0
+      entry: {mode: "breakout_52w", buffer_pct: 0.3}
+      stop_loss: {mode: "percent", value_pct: 7.0}
+      take_profit: {mode: "percent", value_pct: 14.0}
+    guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 35.0, wf_calmar_cov_max_pct: 30.0}
 
   S3_breakout_checklist:
     description: "Breakout 52w + filtri (NAV P/D, spread, stagionalità, regime, breadth)"
     universe: "etf-trading-config/universe.csv"
-    entry:
-      mode: "breakout_52w"
-      buffer_pct: 0.3
-    stop_loss:
-      mode: "percent"
-      value_pct: 7.0
-    take_profit:
-      mode: "percent"
-      value_pct: 14.0
+    entry: {mode: "breakout_52w", buffer_pct: 0.3}
+    stop_loss: {mode: "percent", value_pct: 7.0}
+    take_profit: {mode: "percent", value_pct: 14.0}
     filters:
       nav_premium_abs_max_pct: 0.5
       spread_median_max_pct: 0.25
       seasonality_months_on: [11, 12, 1, 2, 3, 4]
-      regime:
-        market_above_ma200: "SWDA.MI"
-        sector_above_ma200: "IXN"
-      breadth:
-        proxy: "QQQ"
-        rule: "close_above_ma"
-        ma_period: 50
-    guardrails:
-      sharpe_min: 0.30
-      profit_factor_min: 1.10
-      maxdd_abs_max_pct: 35.0
-      wf_calmar_cov_max_pct: 30.0
+      regime: {market_above_ma200: "SWDA.MI", sector_above_ma200: "IXN"}
+      breadth: {proxy: "QQQ", rule: "close_above_ma", ma_period: 50}
+    guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 35.0, wf_calmar_cov_max_pct: 30.0}
