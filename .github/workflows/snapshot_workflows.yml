@@ -1,0 +1,28 @@
+
+name: Snapshot Workflows
+on:
+  workflow_dispatch: {}
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Snapshot workflow files
+        run: |
+          mkdir -p workflows_snapshot
+          cp -R .github/workflows/*.yml workflows_snapshot/ || true
+          cp -R .github/workflows/*.yaml workflows_snapshot/ || true
+          echo "### Consolidated workflows snapshot" > workflows_snapshot/CONSOLIDATED.md
+          for f in .github/workflows/*.yml .github/workflows/*.yaml; do
+            [ -f "$f" ] || continue
+            echo -e "\n\n## $f\n\n\`\`\`yaml" >> workflows_snapshot/CONSOLIDATED.md
+            cat "$f" >> workflows_snapshot/CONSOLIDATED.md
+            echo -e "\n\`\`\`" >> workflows_snapshot/CONSOLIDATED.md
+          done
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add workflows_snapshot
+          git commit -m "Snapshot workflows"
+          git push
