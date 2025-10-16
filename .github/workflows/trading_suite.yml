@@ -42,7 +42,7 @@ jobs:
 
       - name: Download EOD
         run: |
-          python etf-trading-engine/scripts/download_eod_yf.py             --universe ./etf-trading-config/universe.csv             --output ./etf-trading-engine/data/eod.csv             --start 2018-01-01 --threads 4 --sleep 0.15 --min_success 10
+          python etf-trading-engine/scripts/download_eod_yf.py             --universe ./etf-trading-config/universe.csv             --output ./etf-trading-engine/data/eod.csv             --start 2018-01-01 --threads 1 --sleep 1 --min_success 1
         shell: bash
 
       - name: Sanity check EOD
