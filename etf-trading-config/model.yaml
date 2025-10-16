@@ -1,6 +1,8 @@
+
+
 params:
-  atr_pct: 1.0        # richiesto dal motore
-  buffer_mul: 1.0     # richiesto dal motore (moltiplicatore del buffer)
+  atr_pct: 1.0
+  buffer_mul: 1.0
   
 general:
   data:
