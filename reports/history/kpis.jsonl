@@ -16,3 +16,4 @@
 {"ts": "2025-10-15T16:36:29.167979Z", "kpis": {"Sharpe": -0.09478957676606606, "MaxDD": -0.07285421645756274, "Calmar": NaN, "ProfitFactor": 0.97573526274286, "CAGR_sim": NaN}}
 {"ts": "2025-10-15T17:31:42.705419Z", "kpis": {"Sharpe": -0.09478957676606606, "MaxDD": -0.07285421645756274, "Calmar": NaN, "ProfitFactor": 0.97573526274286, "CAGR_sim": NaN}}
 {"ts": "2025-10-16T15:33:01.801418Z", "kpis": {"Sharpe": 0.0, "MaxDD": 0.0, "Calmar": NaN, "ProfitFactor": 0.0, "CAGR_sim": NaN}}
+{"ts": "2025-10-16T16:42:00.888084Z", "kpis": {"Sharpe": 0.0, "MaxDD": 0.0, "Calmar": NaN, "ProfitFactor": 0.0, "CAGR_sim": NaN}}
