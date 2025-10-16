@@ -1,5 +1,5 @@
 
-# Signals config — SMA + ATR + Breakout + Liquidity defaults
+# Signals config — complete defaults incl. rank weights (mom252 + mom63)
 strategy: "sma_crossover"
 
 # SMA
@@ -14,15 +14,16 @@ atr_period: 14
 breakout_lookback: 260
 breakout_buffer_pct: 0.3
 
-# Liquidity filters (required by signals.py)
-# Metti a 0 per non bloccare i segnali in mercati poco liquidi
+# Liquidity filters
 min_adv20: 0
 min_volume: 0
 
+# Momentum ranking weights
+# Alcuni script usano 'mom63' (6-3 mesi) invece di 'mom6': forniamo entrambe
 rank_weights:
   mom252: 0.6
-  mom6: 0.4
-
+  mom63: 0.4
+  mom6: 0.0
 
 risk_per_trade_pct: 1.0
 output_dir: "./outputs/signals"
