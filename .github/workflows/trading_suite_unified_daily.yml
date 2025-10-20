@@ -43,6 +43,8 @@ jobs:
           python etf-trading-engine/scripts/merge_eod_robust.py             --datalake ./etf-datalake             --output   ./etf-trading-engine/data/eod.csv
 
       - name: Run model
+        env:
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/src:${{ github.workspace }}/etf-trading-engine:${{ github.workspace }}/etf-trading-engine/src
         run: |
           mkdir -p outputs
           python etf-trading-engine/scripts/run_ci_backtest.py             --config ./etf-trading-config/model.yaml             --data   ./etf-trading-engine/data/eod.csv             --outdir ./outputs
