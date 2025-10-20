@@ -27,7 +27,7 @@ Questa pagina è generata automaticamente dal workflow **Content Indexer**.
 | `README_RETRO_ASOF.txt` | 469 | `3cb6bee7` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/README_RETRO_ASOF.txt) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/README_RETRO_ASOF.txt) |
 | `README_WEB_INGEST.txt` | 461 | `a3997748` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/README_WEB_INGEST.txt) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/README_WEB_INGEST.txt) |
 | `RUNBOOK.md` | 647 | `df0781b6` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/RUNBOOK.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/RUNBOOK.md) |
-| `docs/CONTENT_INDEX.md` | 48,084 | `d09948b9` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/docs/CONTENT_INDEX.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/docs/CONTENT_INDEX.md) |
+| `docs/CONTENT_INDEX.md` | 79,613 | `457f5dc4` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/docs/CONTENT_INDEX.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/docs/CONTENT_INDEX.md) |
 | `docs/UNIFIED_AUTOMATION_PATCH.md` | 2,091 | `75e35245` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/docs/UNIFIED_AUTOMATION_PATCH.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/docs/UNIFIED_AUTOMATION_PATCH.md) |
 | `docs/UNIVERSE_PIPELINE.md` | 978 | `924a8c9b` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/docs/UNIVERSE_PIPELINE.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/docs/UNIVERSE_PIPELINE.md) |
 | `etf-trading-config/README.md` | 45 | `b2860f67` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-config/README.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-config/README.md) |
@@ -107,9 +107,12 @@ Questa pagina è generata automaticamente dal workflow **Content Indexer**.
 | `reports/daily/2025-10-18/guardrails_status.json` | 2,353 | `8a644bec` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/daily/2025-10-18/guardrails_status.json) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/daily/2025-10-18/guardrails_status.json) |
 | `reports/daily/2025-10-18/kpis.json` | 94 | `bdf6dfa3` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/daily/2025-10-18/kpis.json) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/daily/2025-10-18/kpis.json) |
 | `reports/daily/2025-10-18/wf_report.json` | 1,738 | `a65bfefc` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/daily/2025-10-18/wf_report.json) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/daily/2025-10-18/wf_report.json) |
-| `reports/history/kpis.jsonl` | 3,944 | `e7b8a9c5` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/history/kpis.jsonl) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/history/kpis.jsonl) |
-| `reports/history/wf.jsonl` | 28,053 | `63eb85dd` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/history/wf.jsonl) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/history/wf.jsonl) |
-| `reports/latest.json` | 4,638 | `f278e28a` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/latest.json) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/latest.json) |
+| `reports/daily/2025-10-19/guardrails_status.json` | 2,353 | `8a644bec` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/daily/2025-10-19/guardrails_status.json) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/daily/2025-10-19/guardrails_status.json) |
+| `reports/daily/2025-10-19/kpis.json` | 94 | `bdf6dfa3` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/daily/2025-10-19/kpis.json) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/daily/2025-10-19/kpis.json) |
+| `reports/daily/2025-10-19/wf_report.json` | 1,738 | `a65bfefc` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/daily/2025-10-19/wf_report.json) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/daily/2025-10-19/wf_report.json) |
+| `reports/history/kpis.jsonl` | 4,204 | `7350fce2` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/history/kpis.jsonl) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/history/kpis.jsonl) |
+| `reports/history/wf.jsonl` | 30,725 | `800bc03d` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/history/wf.jsonl) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/history/wf.jsonl) |
+| `reports/latest.json` | 4,638 | `b5c8a447` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/reports/latest.json) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/reports/latest.json) |
 
 ## Estratti e Headings
 
@@ -789,45 +792,6 @@ Per espandere l'universo, aggiungi righe a universe.csv (colonna 'Ticker') e fai
 
 ## Pubblicazione nel datalake
 Richiede secret `DATASINK_TOKEN` (PAT con scope `repo`) nel repo *trading-suite*.
-```
-
-### `docs/CONTENT_INDEX.md`
-# Repository Content Index — antoniosanso/etf-trading-suite@main
-## Estratti e Headings
-### `.github/workflows/backtest_matrix.yml`
-### `.github/workflows/content_index.yml`
-### `.github/workflows/content_mirror.yml`
-### `.github/workflows/dataset.yml`
-### `.github/workflows/remove_legacy_eod.yml`
-### `.github/workflows/retro_asof.yml`
-### `.github/workflows/snapshot_workflows.yml`
-### `.github/workflows/status_poster.yml`
-### `.github/workflows/trading_suite.yml`
-### `.github/workflows/unified.yml`
-### `.github/workflows/universe_fetch.yml`
-### `CLEANUP.md`
-# Pulizia workflows
-# Pulizia workflows
-### `DECISIONS.md`
-# DECISIONS.md
-# DECISIONS.md
-### `PATCH_NOTES.md`
-
-```text
-# Repository Content Index — antoniosanso/etf-trading-suite@main
-
-Questa pagina è generata automaticamente dal workflow **Content Indexer**.
-
-| Path | Size | SHA (short) | Link | Raw |
-|---|---:|---|---|---|
-
-| `.github/workflows/backtest_matrix.yml` | 3,135 | `06ce210c` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/.github/workflows/backtest_matrix.yml) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/.github/workflows/backtest_matrix.yml) |
-| `.github/workflows/content_index.yml` | 1,451 | `e65d17be` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/.github/workflows/content_index.yml) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/.github/workflows/content_index.yml) |
-| `.github/workflows/content_mirror.yml` | 815 | `7d9497a7` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/.github/workflows/content_mirror.yml) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/.github/workflows/content_mirror.yml) |
-| `.github/workflows/dataset.yml` | 2,538 | `6f505c82` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/.github/workflows/dataset.yml) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/.github/workflows/dataset.yml) |
-| `.github/workflows/remove_legacy_eod.yml` | 1,584 | `30c0939d` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/.github/workflows/remove_legacy_eod.yml) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/.github/workflows/remove_legacy_eod.yml) |
-| `.github/workflows/retro_asof.yml` | 3,438 | `9edaf0a2` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/.github/workflows/retro_asof.yml) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/.github/workflows/retro_asof.yml) |
-| `.github/workflows/snapshot
 ```
 
 ### `docs/UNIFIED_AUTOMATION_PATCH.md`
@@ -1576,4 +1540,49 @@ def get_universe_text(repo: Optional[str], path: Optional[str], ref: str, raw_ur
     if code == 200:
         try:
             data = json.loads(content.decode("utf-8", errors="replace"))
+```
+
+### `etf-trading-engine/scripts/generate_status.py`
+
+```text
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+generate_status.py — Combine universe + KPI into a single status.json
+"""
+import json, argparse, os
+
+def safe_json(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--universe-json", default="outputs/universe/universe_snapshot.json")
+    ap.add_argument("--kpi-json", default="outputs/status_kpi.json")
+    ap.add_argument("--out", default="outputs/status.json")
+    args = ap.parse_args()
+
+    uni = safe_json(args.universe_json)
+    kpi = safe_json(args.kpi_json)
+
+    status = {
+        "schema": 2,
+        "universe": {
+            "total_rows": uni.get("total_rows"),
+            "unique_tickers": uni.get("unique_tickers"),
+            "duplicate_rows": uni.get("duplicate_rows"),
+        },
+        "kpi": kpi or {},
+    }
+    os.makedirs(os.path.dirname(args.out), exist_ok=True)
+    with open(args.out, "w", encoding="utf-8") as f:
+        json.dump(status, f, ensure_ascii=False, indent=2)
+    print(f"Wrote {args.out}")
+
+if __name__ == "__main__":
+    main()
 ```
