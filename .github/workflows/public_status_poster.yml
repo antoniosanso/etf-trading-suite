@@ -1,0 +1,29 @@
+name: Public Status Poster
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 6 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  post-status:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build status
+        run: |
+          python etf-trading-engine/scripts/public_status.py --out ./STATUS.md
+      - name: Commit status
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          file_pattern: STATUS.md
+          commit_message: "chore(status): update STATUS.md (automated)"
+          branch: main
+          pull_strategy: "REBASE"
+          push_options: "--force-with-lease"

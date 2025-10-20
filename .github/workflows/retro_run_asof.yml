@@ -1,0 +1,25 @@
+name: Retro Run — As-Of
+
+on:
+  workflow_dispatch:
+    inputs:
+      as_of:
+        description: "YYYY-MM-DD"
+        required: true
+permissions:
+  contents: read
+jobs:
+  retro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Retro run
+        run: |
+          python etf-trading-engine/scripts/retro_asof.py --date "${{ github.event.inputs.as_of }}" --config ./etf-trading-config/model.yaml --outdir ./retro_out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: retro-asof-${{ github.event.inputs.as_of }}
+          path: retro_out/*
