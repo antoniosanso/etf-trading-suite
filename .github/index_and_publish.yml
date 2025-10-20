@@ -1,1 +1,43 @@
+name: Index and Publish
 
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: index-and-publish-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  index-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build repo content index
+        run: |
+          mkdir -p docs
+          echo "# Content Index" > docs/CONTENT_INDEX.md
+          echo "" >> docs/CONTENT_INDEX.md
+          find . -type f -not -path '*/\.*' -not -path './docs/*' | sort >> docs/CONTENT_INDEX.md
+      - name: Commit docs
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          file_pattern: docs/CONTENT_INDEX.md
+          commit_message: "chore(docs): update CONTENT_INDEX.md (automated)"
+          branch: main
+          pull_strategy: "REBASE"
+          push_options: "--force-with-lease"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: content-index
+          path: docs/CONTENT_INDEX.md
