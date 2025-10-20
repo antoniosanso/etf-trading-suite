@@ -45,6 +45,7 @@
 ./etf-trading-engine/scripts/index_repo.py
 ./etf-trading-engine/scripts/kpi_aggregator.py
 ./etf-trading-engine/scripts/merge_eod.py
+./etf-trading-engine/scripts/merge_eod_robust.py
 ./etf-trading-engine/scripts/operational_report.py
 ./etf-trading-engine/scripts/portfolio_tools.py
 ./etf-trading-engine/scripts/publish_dataset.py
