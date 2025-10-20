@@ -98,3 +98,4 @@
 ./reports/history/kpis.jsonl
 ./reports/history/wf.jsonl
 ./reports/latest.json
+./trading_suite_unified_daily.yml
