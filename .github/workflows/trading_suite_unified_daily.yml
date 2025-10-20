@@ -12,9 +12,16 @@ jobs:
   unified:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout suite
         uses: actions/checkout@v4
         with:
+          fetch-depth: 1
+
+      - name: Checkout datalake (read-only)
+        uses: actions/checkout@v4
+        with:
+          repository: antoniosanso/etf-datalake
+          path: etf-datalake
           fetch-depth: 1
 
       - name: Setup Python
