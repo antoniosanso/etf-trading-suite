@@ -38,6 +38,7 @@
 ./etf-trading-engine/scripts/download_eod_yf.py
 ./etf-trading-engine/scripts/fetch_file.py
 ./etf-trading-engine/scripts/fetch_universe.py
+./etf-trading-engine/scripts/generate_manifest.py
 ./etf-trading-engine/scripts/generate_status.py
 ./etf-trading-engine/scripts/guardrails.py
 ./etf-trading-engine/scripts/index_repo.py
