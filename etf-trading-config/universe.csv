@@ -1,3 +1,5 @@
-Ticker
-TNOW.MI
-XAIX.MI
+provider,name,ticker_bi,isin,venue,quote_ccy,base_ccy,eur_hedged,theme,source_url
+Amundi,MSCI World Information Technology UCITS ETF EUR Acc,TNOW,LU0533033667,Borsa Italiana,EUR,EUR,No,World Tech sector,https://www.borsaitaliana.it/
+Xtrackers,Artificial Intelligence & Big Data UCITS ETF 1C,XAIX,IE00BGV5VN51,Borsa Italiana,EUR,USD,No,AI & Big Data,https://www.borsaitaliana.it/
+iShares,Automation & Robotics UCITS ETF Acc,RBOT,IE00BYZK4552,Borsa Italiana,EUR,USD,No,Robotics & Automation,https://www.borsaitaliana.it/
+iShares,MSCI Global Semiconductors UCITS ETF,SEME,IE000I8KRLL9,Borsa Italiana,EUR,USD,No,Semiconductors,https://www.borsaitaliana.it/
