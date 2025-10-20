@@ -25,9 +25,10 @@ Questa pagina è generata automaticamente dal workflow **Content Indexer**.
 | `README_OPS.md` | 1,444 | `059b11e3` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/README_OPS.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/README_OPS.md) |
 | `README_PUBLISH_TO_DATALAKE.txt` | 778 | `8275b856` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/README_PUBLISH_TO_DATALAKE.txt) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/README_PUBLISH_TO_DATALAKE.txt) |
 | `README_RETRO_ASOF.txt` | 469 | `3cb6bee7` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/README_RETRO_ASOF.txt) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/README_RETRO_ASOF.txt) |
+| `README_UNIVERSE_BUILDER.md` | 253 | `8d39dff7` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/README_UNIVERSE_BUILDER.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/README_UNIVERSE_BUILDER.md) |
 | `README_WEB_INGEST.txt` | 461 | `a3997748` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/README_WEB_INGEST.txt) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/README_WEB_INGEST.txt) |
 | `RUNBOOK.md` | 647 | `df0781b6` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/RUNBOOK.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/RUNBOOK.md) |
-| `docs/CONTENT_INDEX.md` | 79,613 | `457f5dc4` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/docs/CONTENT_INDEX.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/docs/CONTENT_INDEX.md) |
+| `docs/CONTENT_INDEX.md` | 79,067 | `6f1834c9` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/docs/CONTENT_INDEX.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/docs/CONTENT_INDEX.md) |
 | `docs/UNIFIED_AUTOMATION_PATCH.md` | 2,091 | `75e35245` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/docs/UNIFIED_AUTOMATION_PATCH.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/docs/UNIFIED_AUTOMATION_PATCH.md) |
 | `docs/UNIVERSE_PIPELINE.md` | 978 | `924a8c9b` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/docs/UNIVERSE_PIPELINE.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/docs/UNIVERSE_PIPELINE.md) |
 | `etf-trading-config/README.md` | 45 | `b2860f67` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-config/README.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-config/README.md) |
@@ -41,7 +42,7 @@ Questa pagina è generata automaticamente dal workflow **Content Indexer**.
 | `etf-trading-config/schedules.md` | 612 | `f21f84b6` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-config/schedules.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-config/schedules.md) |
 | `etf-trading-config/signals.yaml` | 507 | `a5dbe834` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-config/signals.yaml) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-config/signals.yaml) |
 | `etf-trading-config/signals.yaml.append` | 78 | `5e93f5af` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-config/signals.yaml.append) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-config/signals.yaml.append) |
-| `etf-trading-config/universe.csv` | 23 | `8385e221` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-config/universe.csv) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-config/universe.csv) |
+| `etf-trading-config/universe.csv` | 653 | `97038479` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-config/universe.csv) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-config/universe.csv) |
 | `etf-trading-config/wf_windows.yaml` | 604 | `5f2dc29b` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-config/wf_windows.yaml) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-config/wf_windows.yaml) |
 | `etf-trading-engine/README.md` | 62 | `794d5f0e` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-engine/README.md) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-engine/README.md) |
 | `etf-trading-engine/examples/portfolio_cli.py` | 845 | `3ab7c0a3` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-engine/examples/portfolio_cli.py) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-engine/examples/portfolio_cli.py) |
@@ -51,6 +52,7 @@ Questa pagina è generata automaticamente dal workflow **Content Indexer**.
 | `etf-trading-engine/scripts/aggregate_news.py` | 3,998 | `7423a1b4` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-engine/scripts/aggregate_news.py) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-engine/scripts/aggregate_news.py) |
 | `etf-trading-engine/scripts/append_reports.py` | 1,234 | `6dbeef6a` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-engine/scripts/append_reports.py) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-engine/scripts/append_reports.py) |
 | `etf-trading-engine/scripts/build_features.py` | 3,501 | `35857810` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-engine/scripts/build_features.py) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-engine/scripts/build_features.py) |
+| `etf-trading-engine/scripts/build_universe.py` | 7,371 | `cc67efb2` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-engine/scripts/build_universe.py) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-engine/scripts/build_universe.py) |
 | `etf-trading-engine/scripts/clip_asof.py` | 891 | `813ee523` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-engine/scripts/clip_asof.py) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-engine/scripts/clip_asof.py) |
 | `etf-trading-engine/scripts/download_eod_yf.py` | 3,177 | `31ac5667` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-engine/scripts/download_eod_yf.py) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-engine/scripts/download_eod_yf.py) |
 | `etf-trading-engine/scripts/fetch_file.py` | 2,497 | `b21d1d1c` | [blob](https://github.com/antoniosanso/etf-trading-suite/blob/main/etf-trading-engine/scripts/fetch_file.py) | [raw](https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/refs/heads/main/etf-trading-engine/scripts/fetch_file.py) |
@@ -754,6 +756,19 @@ Questo pacchetto aggiunge un workflow manuale per eseguire simulazioni "retroatt
 5. I risultati appariranno tra gli artifact con nome `retro-asof-YYYY-MM-DD`.
 ```
 
+### `README_UNIVERSE_BUILDER.md`
+# Aggiunta consigliata al workflow (step prima del merge/backtest):
+# - name: Build/refresh universe (>=200 ETFs)
+#   run: |
+#     python etf-trading-engine/scripts/build_universe.py --min 220 --venues "Borsa Italiana,Euronext Paris,Euronext Amsterdam"
+
+```text
+# Aggiunta consigliata al workflow (step prima del merge/backtest):
+# - name: Build/refresh universe (>=200 ETFs)
+#   run: |
+#     python etf-trading-engine/scripts/build_universe.py --min 220 --venues "Borsa Italiana,Euronext Paris,Euronext Amsterdam"
+```
+
 ### `README_WEB_INGEST.txt`
 
 ```text
@@ -1087,9 +1102,11 @@ top_n: 10
 ### `etf-trading-config/universe.csv`
 
 ```text
-Ticker
-TNOW.MI
-XAIX.MI
+provider,name,ticker_bi,isin,venue,quote_ccy,base_ccy,eur_hedged,theme,source_url
+Amundi,MSCI World Information Technology UCITS ETF EUR Acc,TNOW,LU0533033667,Borsa Italiana,EUR,EUR,No,World Tech sector,https://www.borsaitaliana.it/
+Xtrackers,Artificial Intelligence & Big Data UCITS ETF 1C,XAIX,IE00BGV5VN51,Borsa Italiana,EUR,USD,No,AI & Big Data,https://www.borsaitaliana.it/
+iShares,Automation & Robotics UCITS ETF Acc,RBOT,IE00BYZK4552,Borsa Italiana,EUR,USD,No,Robotics & Automation,https://www.borsaitaliana.it/
+iShares,MSCI Global Semiconductors UCITS ETF,SEME,IE000I8KRLL9,Borsa Italiana,EUR,USD,No,Semiconductors,https://www.borsaitaliana.it/
 ```
 
 ### `etf-trading-config/wf_windows.yaml`
@@ -1380,6 +1397,51 @@ def build_regime(cfg: dict):
     end = str(cfg.get("end", pd.Timestamp.today().date().isoformat()))
 ```
 
+### `etf-trading-engine/scripts/build_universe.py`
+
+```text
+#!/usr/bin/env python3
+"""
+build_universe.py
+Aggrega un universo >=200 ETF UCITS quotati in EUR (priorità Borsa Italiana/Euronext),
+con preferenza classi EUR Hedged quando disponibili e liquide.
+
+Uso:
+  python build_universe.py --min 200 --venues "Borsa Italiana,Euronext Paris,Euronext Amsterdam"
+Output:
+  etf-trading-config/universe.csv
+"""
+
+import argparse, sys, csv, time, re, json, itertools
+from dataclasses import dataclass, asdict
+from typing import List, Dict, Iterable
+from pathlib import Path
+
+# Networking
+import urllib.request
+from urllib.error import URLError, HTTPError
+
+PROVIDERS = [
+    # (name, url, parser)
+    ("iShares", "https://www.ishares.com/it/individual/it/products/etf-product-list?switchLocale=y&siteEntryPassthrough=true", "ishares"),
+    ("Amundi", "https://www.amundietf.it/privateInvestors/Products/List?assetClassView=Equity", "amundi"),
+    ("Xtrackers", "https://etf.dws.com/en-eu/productfinder/", "xtrackers"),
+    ("SPDR", "https://www.ssga.com/it/it/individual/etfs/fund-finder", "spdr"),
+    ("Invesco", "https://etf.invesco.com/it/individual/it/product-list", "invesco"),
+    ("WisdomTree", "https://www.wisdomtree.eu/it-it/etf-list", "wisdomtree"),
+    ("VanEck", "https://www.vaneck.com/it/it/investment-products/capital-markets/exchange-traded-funds/overview/", "vaneck"),
+    ("Global X", "https://www.globalxetfs.eu/funds/", "globalx"),
+    ("UBS", "https://www.ubs.com/it/it/assetmanagement/etf-institutional/etf-product-list.html", "ubs"),
+    ("HSBC", "https://www.assetmanagement.hsbc.it/it/individual-investor/funds/etf", "hsbc"),
+    ("Franklin", "https://www.franklintempleton.it/it-it/investor/products/etf", "franklin"),
+    ("L&G", "https://www.lgim.com/uki/individual-investors/funds/etf-fund-centre/", "lgim"),
+    ("Rize/ARK", "https://rizeetf.com/it/funds/", "rize"),
+    ("First Trust", "https://www.firsttrustglobalportfolios.com/it/ucits/etfs", "firsttrust"),
+]
+
+VENUE_KEYWORDS = [
+```
+
 ### `etf-trading-engine/scripts/clip_asof.py`
 
 ```text
@@ -1495,94 +1557,4 @@ def main():
     token = os.environ.get("GITHUB_TOKEN", "").strip() or None
     tree = get_tree(owner, repo, args.ref, token)
     pats = [p.strip() for p in args.patterns.split(",") if p.strip()]
-```
-
-### `etf-trading-engine/scripts/fetch_universe.py`
-
-```text
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-fetch_universe.py — Fetch & validate the ETF universe from a public GitHub repo.
-Outputs:
-- outputs/universe/universe_snapshot.csv
-- outputs/universe/universe_snapshot.json
-"""
-import os, sys, csv, json, argparse, requests
-from typing import Optional, Tuple, List
-
-def _build_raw_url(repo: str, path: str, ref: str = "refs/heads/main") -> str:
-    return f"https://raw.githubusercontent.com/{repo}/{ref}/{path}"
-
-def _fetch(url: str, token: Optional[str] = None) -> Tuple[int, bytes]:
-    headers = {"User-Agent": "universe-fetcher/1.0"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    r = requests.get(url, headers=headers, timeout=30)
-    return r.status_code, r.content
-
-def get_universe_text(repo: Optional[str], path: Optional[str], ref: str, raw_url: Optional[str]) -> str:
-    token = os.environ.get("GITHUB_TOKEN", "").strip() or None
-    if raw_url:
-        code, content = _fetch(raw_url, token)
-        if code == 200:
-            return content.decode("utf-8", errors="replace")
-        raise RuntimeError(f"fetch failed {code} for raw={raw_url}")
-    if not (repo and path):
-        raise ValueError("Either --raw or both --repo and --path must be provided.")
-    url = _build_raw_url(repo, path, ref)
-    code, content = _fetch(url, token)
-    if code == 200:
-        return content.decode("utf-8", errors="replace")
-    # Fallback: GitHub Contents API
-    api_url = f"https://api.github.com/repos/{repo}/contents/{path}?ref={ref}"
-    code, content = _fetch(api_url, token)
-    if code == 200:
-        try:
-            data = json.loads(content.decode("utf-8", errors="replace"))
-```
-
-### `etf-trading-engine/scripts/generate_status.py`
-
-```text
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-generate_status.py — Combine universe + KPI into a single status.json
-"""
-import json, argparse, os
-
-def safe_json(path):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--universe-json", default="outputs/universe/universe_snapshot.json")
-    ap.add_argument("--kpi-json", default="outputs/status_kpi.json")
-    ap.add_argument("--out", default="outputs/status.json")
-    args = ap.parse_args()
-
-    uni = safe_json(args.universe_json)
-    kpi = safe_json(args.kpi_json)
-
-    status = {
-        "schema": 2,
-        "universe": {
-            "total_rows": uni.get("total_rows"),
-            "unique_tickers": uni.get("unique_tickers"),
-            "duplicate_rows": uni.get("duplicate_rows"),
-        },
-        "kpi": kpi or {},
-    }
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    with open(args.out, "w", encoding="utf-8") as f:
-        json.dump(status, f, ensure_ascii=False, indent=2)
-    print(f"Wrote {args.out}")
-
-if __name__ == "__main__":
-    main()
 ```
