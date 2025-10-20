@@ -1,0 +1,47 @@
+name: Trading Suite — Unified Daily
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 15 * * 1-5"
+
+permissions:
+  contents: read
+
+jobs:
+  unified:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install runtime deps (pandas)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas
+
+      - name: Build/refresh universe (>=200 ETFs)
+        run: |
+          python etf-trading-engine/scripts/build_universe.py --min 220 --venues "Borsa Italiana,Euronext Paris,Euronext Amsterdam"
+
+      - name: Merge EOD
+        run: |
+          mkdir -p etf-trading-engine/data
+          python etf-trading-engine/scripts/merge_eod.py             --datalake ./etf-datalake/data             --output ./etf-trading-engine/data/eod.csv             --datecol Date --closecol Close --tickercol Ticker             --opencol Open --highcol High --lowcol Low --volumecol Volume
+
+      - name: Run model
+        run: |
+          python etf-trading-engine/scripts/run_ci_backtest.py             --config ./etf-trading-config/model.yaml             --data ./etf-trading-engine/data/eod.csv             --outdir ./outputs
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-daily-results
+          path: outputs/*
