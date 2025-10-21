@@ -1,9 +1,9 @@
-name: Trading Suite — Unified (Fetch→Index→Model→Report)
+name: Trading Suite — Unified (Fetch→Index→Model→Report→Persist)
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "45 15 * * 1-5"   # feriali ~17:45 Europe/Rome
+    - cron: "45 15 * * 1-5"
 
 permissions:
   contents: write
@@ -11,11 +11,13 @@ permissions:
 jobs:
   unified:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout suite
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -60,13 +62,22 @@ jobs:
             --eod latest/eod-latest.csv \
             --report outputs
 
-      - name: Persist latest results to repo
+      - name: Persist full dataset to repository
         run: |
-         mkdir -p latest
-         cp -r latest/*.csv latest/*.json latest/*.txt ./ || true
-         git config --global user.name "github-actions[bot]"
-         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-         git add latest/*.csv latest/*.json latest/*.txt || true
-         git commit -m "Update latest dataset and index [auto]" || echo "No changes to commit"
-         git push origin main || echo "Push skipped (already up to date)"
+          echo "📦 Preparing to persist full dataset..."
+          mkdir -p latest data
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Assicurati che esistano i file prima del commit
+          ls -lh latest/ || true
+          ls -lh data/ || true
+
+          # Aggiungi sia latest che data (storico)
+          git add latest/*.csv latest/*.json latest/*.txt data/*.csv || true
+
+          # Commit solo se ci sono modifiche
+          git diff --cached --quiet || git commit -m "Auto-update: persist full dataset (latest + data)"
+
+          # Push verso main
+          git push origin main || echo "⚠️ Nothing new to push (already up-to-date)"
