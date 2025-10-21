@@ -1,47 +1,46 @@
 #!/usr/bin/env python3
-import argparse, os, sys, math, json, time
+import argparse, os, time, json
 from pathlib import Path
-from datetime import datetime, timedelta, timezone
 import pandas as pd
 import numpy as np
 import yfinance as yf
 from pandas_datareader import data as pdr
 
-SEED_ETFS = {
-    "CSPX.L","VUAA.AS","VWCE.DE","EUNL.DE","SXR8.DE","SXR8.MI","SPY5.L","IS3N.DE","IUSQ.DE","IUS3.DE","IUSP.L",
-    "EQQQ.L","EXXT.DE","XDJP.DE","XD9U.DE","XDWD.DE","XDEM.MI","XRLU.MI","XESC.DE","XDEV.DE","XMME.MI","XMRM.MI",
-    "EMIM.L","EIMI.L","SEME.MI","ESPO.MI","RBOT.MI","XAIX.MI","TNOW.MI","FRST.MI","WCLD.MI","WTAI.MI","CIBR.MI",
-    "HACK.MI","BOTZ.MI","ROBO.MI","BATT.MI","WHEA.MI","GLUE.MI","EMQQ.MI","DPAY.MI","SEML.MI","WGLF.MI","CYBR.MI",
-    "EFA","EEM","EWJ","EWH","EWA","EWG","EWC","EWU","AGG","BND","EMB","BIL"
-}
+SAFE_SEED = [
+    "CSPX.L","VUAA.AS","VWCE.DE","EUNL.DE","SXR8.DE","SPY5.L","IS3N.DE","IUSQ.DE","IUS3.DE","IUSP.L",
+    "EQQQ.L","XDJP.DE","XD9U.DE","XDWD.DE","XESC.DE","XDEV.DE",
+    "EMIM.L","EIMI.L","IGLT.L","IEMB.L",
+    "EFA","EEM","EWJ","EWH","EWA","EWG","EWC","EWU","AGG","BND","EMB","BIL",
+]
+
+ALT_SUFFIXES = [".DE",".L",".AS",".PA",".SW",".IR",".BR", ".MI"]
 
 def load_universe(path):
     want = set()
     p = Path(path)
     if p.exists():
-        df = pd.read_csv(p)
-        cols = {c.lower(): c for c in df.columns}
-        cand = None
-        for k in ["ticker_bi","ticker","symbol"]:
-            if k in cols: cand = cols[k]; break
-        if cand:
-            want |= {str(t).strip() for t in df[cand].dropna() if str(t).strip()}
+        try:
+            df = pd.read_csv(p)
+            cols = {c.lower(): c for c in df.columns}
+            for k in ["ticker_bi","ticker","symbol"]:
+                if k in cols:
+                    want |= {str(t).strip() for t in df[cols[k]].dropna() if str(t).strip()}
+                    break
+        except Exception:
+            pass
     return want
 
 def expand_symbols(symbols):
     out = set()
     for s in symbols:
-        if not s: continue
+        if not s:
+            continue
         if "." in s:
             out.add(s)
-        else:
-            for suf in [".MI",".AS",".PA",".DE"]:
-                out.add(s + suf)
+            continue
+        for suf in ALT_SUFFIXES:
+            out.add(s + suf)
     return out
-
-def ensure_dirs(data_root, latest_dir):
-    Path(data_root).mkdir(parents=True, exist_ok=True)
-    Path(latest_dir).mkdir(parents=True, exist_ok=True)
 
 def fetch_yf(sym):
     try:
@@ -53,12 +52,13 @@ def fetch_yf(sym):
             "Close":"Close","Adj Close":"AdjClose","Volume":"Volume"
         })
         df["Ticker"] = sym
-        if "Currency" not in df.columns: df["Currency"] = ""
-        cols_full = ["Date","Ticker","Open","High","Low","Close","Volume","Currency"]
-        for c in cols_full:
-            if c not in df.columns: df[c] = np.nan
-        df = df[cols_full]
-        return df
+        if "Currency" not in df.columns:
+            df["Currency"] = ""
+        cols = ["Date","Ticker","Open","High","Low","Close","Volume","Currency"]
+        for c in cols:
+            if c not in df.columns:
+                df[c] = np.nan
+        return df[cols]
     except Exception:
         return None
 
@@ -74,49 +74,51 @@ def fetch_stooq(sym):
         })
         df["Ticker"] = sym
         df["Currency"] = ""
-        df = df[["Date","Ticker","Open","High","Low","Close","Volume","Currency"]]
-        return df
+        return df[["Date","Ticker","Open","High","Low","Close","Volume","Currency"]]
     except Exception:
         return None
 
-def cross_check(primary_df, secondary_df, tol=0.6):
+def cross_check(a, b, tol=0.8):
     try:
-        if primary_df is None or secondary_df is None or primary_df.empty or secondary_df.empty:
-            return True, ""
-        a = primary_df.copy(); a["Date"] = pd.to_datetime(a["Date"]); a = a.dropna(subset=["Date"])
-        b = secondary_df.copy(); b["Date"] = pd.to_datetime(b["Date"]); b = b.dropna(subset=["Date"])
-        if a.empty or b.empty: return True, ""
+        if a is None or b is None or a.empty or b.empty:
+            return True
+        a = a.copy(); b = b.copy()
+        a["Date"] = pd.to_datetime(a["Date"], errors="coerce"); a = a.dropna(subset=["Date"])
+        b["Date"] = pd.to_datetime(b["Date"], errors="coerce"); b = b.dropna(subset=["Date"])
+        if a.empty or b.empty:
+            return True
         d = min(a["Date"].max(), b["Date"].max())
         a_last = float(a[a["Date"]==d]["Close"].iloc[-1]) if (a["Date"]==d).any() else None
         b_last = float(b[b["Date"]==d]["Close"].iloc[-1]) if (b["Date"]==d).any() else None
-        if a_last is None or b_last is None: return True, ""
-        diff_pct = abs(a_last - b_last) / max(1e-9, b_last) * 100.0
-        return (diff_pct <= tol), f"diff_pct={diff_pct:.2f}% on {d.date()}"
-    except Exception as e:
-        return True, f"check_error={e}"
+        if a_last is None or b_last is None:
+            return True
+        diff = abs(a_last - b_last) / max(1e-9, b_last) * 100.0
+        return diff <= tol
+    except Exception:
+        return True
 
-def save_csv(df, out_path):
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(out_path, index=False)
+def normalize_numeric(df):
+    for c in ["Open","High","Low","Close","Volume"]:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    df = df.dropna(subset=["Date","Close"])
+    return df
 
-def build_index_and_latest(data_root, latest_dir):
-    files = sorted(Path(data_root).glob("*.csv"))
-    items = []; latest_rows = []
+def build_index_and_latest(root, latest_dir):
+    files = sorted(Path(root).glob("*.csv"))
+    items, latest = [], []
     for p in files:
         try:
             df = pd.read_csv(p, parse_dates=["Date"])
-            if df.empty: continue
+            if df.empty:
+                continue
             df = df.sort_values("Date")
             last = df.iloc[-1]
-            latest_rows.append({
+            latest.append({
                 "Date": last["Date"],
                 "Ticker": last.get("Ticker", p.stem),
-                "Open": last.get("Open", None),
-                "High": last.get("High", None),
-                "Low": last.get("Low", None),
-                "Close": last.get("Close", None),
-                "Volume": last.get("Volume", None),
-                "Currency": last.get("Currency", None),
+                "Open": last.get("Open"), "High": last.get("High"),
+                "Low": last.get("Low"), "Close": last.get("Close"),
+                "Volume": last.get("Volume"), "Currency": last.get("Currency","")
             })
             items.append({
                 "ticker": str(last.get("Ticker", p.stem)),
@@ -127,56 +129,50 @@ def build_index_and_latest(data_root, latest_dir):
             })
         except Exception:
             continue
-    idx = {"count": len(items), "generated_utc": pd.Timestamp.utcnow().isoformat(), "items": items}
-    Path(latest_dir, "index.json").write_text(json.dumps(idx, ensure_ascii=False, separators=(",",":")), encoding="utf-8")
-    if latest_rows:
-        cols = ["Date","Ticker","Open","High","Low","Close","Volume","Currency"]
-        pd.DataFrame(latest_rows, columns=cols).to_csv(Path(latest_dir, "eod-latest.csv"), index=False)
+    Path(latest_dir, "index.json").write_text(
+        json.dumps({"count": len(items), "generated_utc": pd.Timestamp.utcnow().isoformat(), "items": items},
+                   ensure_ascii=False, separators=(",",":")),
+        encoding="utf-8"
+    )
+    if latest:
+        pd.DataFrame(latest, columns=["Date","Ticker","Open","High","Low","Close","Volume","Currency"])\
+          .to_csv(Path(latest_dir, "eod-latest.csv"), index=False)
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--universe", required=False, default="")
+    ap.add_argument("--universe", default="")
     ap.add_argument("--data-root", required=True)
     ap.add_argument("--latest-dir", required=True)
     ap.add_argument("--min", type=int, default=220)
-    ap.add_argument("--tolerance", type=float, default=0.6)
+    ap.add_argument("--tolerance", type=float, default=0.8)
     args = ap.parse_args()
 
     Path(args.data_root).mkdir(parents=True, exist_ok=True)
     Path(args.latest_dir).mkdir(parents=True, exist_ok=True)
 
-    want = set()
+    want = set(SAFE_SEED)
     want |= load_universe(args.universe)
-    want |= SEED_ETFS
-
-    # Expand: add venues if missing
-    expanded = set()
-    for s in want:
-        if "." in s: expanded.add(s)
-        else:
-            for suf in [".MI",".AS",".PA",".DE"]:
-                expanded.add(s + suf)
+    want = expand_symbols(want)
 
     existing = {p.stem for p in Path(args.data_root).glob("*.csv")}
-    to_fetch = sorted(expanded - existing)
+    to_fetch = [s for s in sorted(want) if s not in existing]
 
     added = 0
     for sym in to_fetch:
         yf_df = fetch_yf(sym)
         stq_df = fetch_stooq(sym)
-
-        ok, note = cross_check(yf_df, stq_df, tol=args.tolerance)
-        out = None
-        if yf_df is not None and ok:
-            out = yf_df
-        elif stq_df is not None:
-            out = stq_df
-        if out is not None:
-            save_csv(out, Path(args.data_root, f"{sym}.csv"))
-            added += 1
-
+        ok = cross_check(yf_df, stq_df, args.tolerance)
+        out = yf_df if (yf_df is not None and ok) else (stq_df if stq_df is not None else None)
+        if out is None:
+            continue
+        out = normalize_numeric(out)
+        if out.shape[0] < 50:  # evita serie troppo corte
+            continue
+        out.to_csv(Path(args.data_root, f"{sym}.csv"), index=False)
+        added += 1
         if (len(existing) + added) >= args.min:
             break
+        time.sleep(0.2)
 
     build_index_and_latest(args.data_root, args.latest_dir)
 
