@@ -32,7 +32,10 @@ def main():
     out_lines.append(f"[Q3] Colonne standard snapshot: {'OK' if cols_ok else 'FAIL'}")
     if not df.empty:
         max_date = pd.to_datetime(df["Date"]).max()
-        recent_ok = (pd.Timestamp.utcnow() - max_date.tz_localize(None)) <= pd.Timedelta(days=10)
+        # Normalizza entrambi a naive UTC per confronto sicuro
+        now_utc = pd.Timestamp.utcnow().tz_localize(None)
+        max_naive = max_date.tz_localize(None) if getattr(max_date, "tzinfo", None) else max_date
+        recent_ok = (now_utc - max_naive) <= pd.Timedelta(days=10)
         out_lines.append(f"[Q2] Ultima data {max_date.date()} (<=10 giorni): {'OK' if recent_ok else 'WARN'}")
     else:
         out_lines.append("[Q2] Snapshot vuoto: FAIL")
