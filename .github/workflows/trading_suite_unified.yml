@@ -3,7 +3,7 @@ name: Trading Suite — Unified (Fetch→Index→Model→Report)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "45 15 * * 1-5"
+    - cron: "45 15 * * 1-5"   # feriali ~17:45 Europe/Rome
 
 permissions:
   contents: write
@@ -28,25 +28,37 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas numpy yfinance pandas-datareader pyyaml
 
-      - name: Extend & fetch data (EUR + USD-denom traded in EUR), then index & snapshot
+      - name: Extend & fetch data (robust)
         run: |
-          python scripts/fetch_and_index.py             --universe etf-trading-config/universe.csv             --data-root data             --latest-dir latest             --min 220             --tolerance 0.6
+          python scripts/fetch_and_index_v2.py \
+            --universe etf-trading-config/universe.csv \
+            --data-root data \
+            --latest-dir latest \
+            --min 220 \
+            --tolerance 0.8
 
-      - name: Merge EOD (already normalized from data/)
+      - name: Prepare EOD for model (fix dtypes)
         run: |
-          mkdir -p etf-trading-engine/data
-          cp latest/eod-latest.csv etf-trading-engine/data/eod.csv
+          python scripts/fix_eod_types.py \
+            --snapshot latest/eod-latest.csv \
+            --output   etf-trading-engine/data/eod.csv
 
       - name: Run model
         env:
           PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/src:${{ github.workspace }}/etf-trading-engine:${{ github.workspace }}/etf-trading-engine/src
         run: |
           mkdir -p outputs
-          python etf-trading-engine/scripts/run_ci_backtest.py             --config ./etf-trading-config/model.yaml             --data   ./etf-trading-engine/data/eod.csv             --outdir ./outputs
+          python etf-trading-engine/scripts/run_ci_backtest.py \
+            --config ./etf-trading-config/model.yaml \
+            --data   ./etf-trading-engine/data/eod.csv \
+            --outdir ./outputs
 
       - name: System checks (auto QA)
         run: |
-          python scripts/system_checks.py             --index latest/index.json             --eod latest/eod-latest.csv             --report outputs
+          python scripts/system_checks.py \
+            --index latest/index.json \
+            --eod latest/eod-latest.csv \
+            --report outputs
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
