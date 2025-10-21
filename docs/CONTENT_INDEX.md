@@ -99,4 +99,6 @@
 ./reports/history/kpis.jsonl
 ./reports/history/wf.jsonl
 ./reports/latest.json
+./scripts/fetch_and_index.py
+./scripts/system_checks.py
 ./trading_suite_unified_daily.yml
