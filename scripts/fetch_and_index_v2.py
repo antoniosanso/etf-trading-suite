@@ -35,11 +35,21 @@ def expand_symbols(symbols):
     for s in symbols:
         if not s:
             continue
+
+        # Se il ticker è già con suffisso, lascialo stare
         if "." in s:
             out.add(s)
             continue
-        for suf in ALT_SUFFIXES:
+
+        # Alcuni ETF americani noti NON hanno equivalenti europei
+        if s in ["AGG", "BND", "EFA", "EEM", "EWJ", "EWA", "EWG", "EWC", "EWU"]:
+            out.add(s)
+            continue
+
+        # Altri simboli europei: prova solo i mercati più comuni
+        for suf in [".L", ".DE", ".AS", ".MI"]:
             out.add(s + suf)
+
     return out
 
 def fetch_yf(sym):
