@@ -1,0 +1,8 @@
+[Q1] ETF nell'indice: 15  -> WARN
+[Q3] Colonne standard snapshot: OK
+[Q2] Ultima data 2025-10-20 (<=10 giorni): OK
+[Q4] Output modello presenti: OK
+[Q5] Size portafoglio: TBD (richiede parsing report)
+[Q6] Kill-switch DD: TBD (richiede parsing log)
+[Q7] Risk sizing>0: TBD (richiede parsing log/trades)
+[Q8] Ordini generati: TBD (richiede parsing ordini)
