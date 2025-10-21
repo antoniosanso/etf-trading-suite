@@ -98,16 +98,27 @@ def cross_check(a, b, tol=0.8):
         return True
 
 def normalize_numeric(df):
-    # Conversione robusta — forza Series anche per colonne corrotte
+    # normalizza nomi colonne e forza tipi numerici
+    df.columns = [c.strip().capitalize() for c in df.columns]
+
+    # assicurati che esistano le colonne minime richieste
+    for col in ["Date", "Close"]:
+        if col not in df.columns:
+            df[col] = np.nan
+
+    # conversione sicura a numerico
     for col in ["Open", "High", "Low", "Close", "Volume"]:
         if col in df.columns:
             try:
-                vals = df[col].values.flatten()  # garantisce 1D
-                df[col] = pd.to_numeric(pd.Series(vals), errors="coerce")
+                vals = pd.Series(df[col].values.flatten())
+                df[col] = pd.to_numeric(vals, errors="coerce")
             except Exception:
                 df[col] = np.nan
+
+    # parsing date robusto
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
     df = df.dropna(subset=["Date", "Close"])
+
     return df
 
 def build_index_and_latest(root, latest_dir):
