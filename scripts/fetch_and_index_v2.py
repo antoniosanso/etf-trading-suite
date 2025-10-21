@@ -98,10 +98,13 @@ def cross_check(a, b, tol=0.8):
         return True
 
 def normalize_numeric(df):
-    # normalizza nomi colonne e forza tipi numerici
-    df.columns = [c.strip().capitalize() for c in df.columns]
+    # se le colonne sono multi-index, riducile a stringhe semplici
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = ["_".join([str(x) for x in tup if x]) for tup in df.columns]
+    else:
+        df.columns = [str(c).strip().capitalize() for c in df.columns]
 
-    # assicurati che esistano le colonne minime richieste
+    # assicurati che ci siano almeno queste colonne
     for col in ["Date", "Close"]:
         if col not in df.columns:
             df[col] = np.nan
