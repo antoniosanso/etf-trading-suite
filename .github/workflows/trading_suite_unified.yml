@@ -1,4 +1,4 @@
-name: Trading Suite — Unified (Fetch→Index→Model→Report→Persist)
+name: Trading Suite — Unified (Full Fetch → Index → Model → Persist)
 
 on:
   workflow_dispatch:
@@ -37,18 +37,39 @@ jobs:
           https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/main/etf-trading-config/universe.csv
           head -n 5 etf-trading-config/universe.csv
 
-      - name: Run fetch and index
+      - name: 🌍 Fetch EOD data from Yahoo Finance
         run: |
-          python3 scripts/fetch_and_index_v2.py
-      
-      - name: Extend & fetch data (robust)
-        run: |
-          python scripts/fetch_and_index_v2.py \
-            --universe etf-trading-config/universe.csv \
-            --data-root data \
-            --latest-dir latest \
-            --min 220 \
-            --tolerance 0.8
+          echo "Downloading full historical data for all ETF in universe..."
+          mkdir -p data latest
+          python - <<'EOF'
+          import pandas as pd, yfinance as yf, os
+          u = pd.read_csv("etf-trading-config/universe.csv")
+          tickers = u["ticker_bi"].dropna().unique().tolist()
+          os.makedirs("data", exist_ok=True)
+          count = 0
+          for t in tickers:
+              try:
+                  d = yf.download(t, period="5y", interval="1d", progress=False)
+                  if len(d) > 0:
+                      d.to_csv(f"data/{t}.csv")
+                      count += 1
+              except Exception as e:
+                  print(f"⚠️ {t}: {e}")
+          print(f"✅ Downloaded {count} ETF files.")
+          EOF
+
+          echo "Compiling latest snapshot..."
+          python - <<'EOF'
+          import pandas as pd, glob
+          files = glob.glob("data/*.csv")
+          dfs = []
+          for f in files:
+              df = pd.read_csv(f)
+              df["Ticker"] = os.path.basename(f).replace(".csv","")
+              dfs.append(df.tail(1))
+          pd.concat(dfs).to_csv("latest/eod-latest.csv", index=False)
+          print(f"✅ Snapshot saved to latest/eod-latest.csv with {len(dfs)} ETFs.")
+          EOF
 
       - name: Prepare EOD for model (fix dtypes)
         run: |
@@ -75,20 +96,9 @@ jobs:
 
       - name: Persist full dataset to repository
         run: |
-          echo "📦 Preparing to persist full dataset..."
-          mkdir -p latest data
+          echo "📦 Persisting updated dataset..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Assicurati che esistano i file prima del commit
-          ls -lh latest/ || true
-          ls -lh data/ || true
-
-          # Aggiungi sia latest che data (storico)
-          git add latest/*.csv latest/*.json latest/*.txt data/*.csv || true
-
-          # Commit solo se ci sono modifiche
-          git diff --cached --quiet || git commit -m "Auto-update: persist full dataset (latest + data)"
-
-          # Push verso main
+          git add data/*.csv latest/*.csv || true
+          git diff --cached --quiet || git commit -m "Auto-update: full EOD dataset refreshed"
           git push origin main || echo "⚠️ Nothing new to push (already up-to-date)"
