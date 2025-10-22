@@ -30,11 +30,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas numpy yfinance pandas-datareader pyyaml
 
-      - name: 🔄 Sync ETF Universe from Open Quant Lab
+      - name: 🔄 Sync ETF Universe
         run: |
-          echo "Fetching latest ETF universe from Open Quant Lab..."
+          echo "Fetching latest ETF universe..."
           curl -L -o etf-trading-config/universe.csv \
-          https://raw.githubusercontent.com/open-quant-lab/ucits-etf-universe/main/universe_full_400.csv
+          https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/main/etf-trading-config/universe.csv
           head -n 5 etf-trading-config/universe.csv
 
       - name: Extend & fetch data (robust)
