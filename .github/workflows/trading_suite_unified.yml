@@ -37,6 +37,10 @@ jobs:
           https://raw.githubusercontent.com/antoniosanso/etf-trading-suite/main/etf-trading-config/universe.csv
           head -n 5 etf-trading-config/universe.csv
 
+      - name: Run fetch and index
+        run: |
+          python3 scripts/fetch_and_index_v2.py
+      
       - name: Extend & fetch data (robust)
         run: |
           python scripts/fetch_and_index_v2.py \
