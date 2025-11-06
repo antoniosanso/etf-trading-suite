@@ -1,9 +1,8 @@
 name: unified
-
 on:
   workflow_dispatch:
   schedule:
-    - cron: "35 5 * * 1-5"  # weekdays 06:35 CET approx
+    - cron: "35 5 * * 1-5"
 
 jobs:
   unified:
@@ -35,20 +34,9 @@ jobs:
         run: |
           python - <<'PY'
           import os, json, glob
-          # Example: compile a lightweight snapshot artifact
           files = sorted(glob.glob("data/eod/*.csv"))
-          result = {"files": len(files)}
-          print(json.dumps(result))
+          print(json.dumps({"files": len(files)}))
           PY
-
-      - name: Prepare EOD for model (fix dtypes)
-        run: echo "placeholder"
-
-      - name: Run model
-        run: echo "placeholder"
-
-      - name: System checks (auto QA)
-        run: echo "placeholder"
 
       - name: Persist full dataset to repository
         if: ${{ always() }}
@@ -58,6 +46,3 @@ jobs:
           git add -A || true
           git commit -m "ci: update EOD snapshot [skip ci]" || true
           git push || true
-
-      - name: Post Setup Python
-        run: python -c "print('done')"
