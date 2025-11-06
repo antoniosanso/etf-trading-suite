@@ -1,8 +1,3 @@
 symbol_yf,isin,name,exchange_currency,listing
-XAIX.MI,IE00BGV5VN51,Xtrackers AI & Big Data UCITS ETF EUR Acc,EUR,BorsaItaliana
-TNOW.MI,LU1861132840,Amundi MSCI World Information Technology UCITS ETF Acc,EUR,BorsaItaliana
-RBOT.MI,IE00BYZK4552,iShares Automation & Robotics UCITS ETF EUR Acc,EUR,BorsaItaliana
-SEME.MI,IE00BMCZLK62,iShares MSCI Semiconductors UCITS ETF USD Acc (EUR listing),EUR,BorsaItaliana
-BOTZ.MI,IE00BLCHJB90,Global X Robotics & AI UCITS ETF Acc,EUR,BorsaItaliana
-EDEF.MI,IE0004K1Y5E1,Global X Defense Tech UCITS ETF Acc,EUR,BorsaItaliana
-STK.MI,IE00BKWQ0Q14,SPDR MSCI Europe Technology UCITS ETF Acc,EUR,BorsaItaliana
+XAIX.MI,,Xtrackers AI & Big Data UCITS ETF EUR Acc,EUR,BorsaItaliana
+TNOW.MI,,Amundi MSCI World Information Technology UCITS ETF Acc,EUR,BorsaItaliana
