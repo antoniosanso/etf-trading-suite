@@ -19,7 +19,7 @@ def main():
 
     outdir = Path(args.outdir); outdir.mkdir(parents=True, exist_ok=True)
     (outdir / 'kpis.json').write_text(json.dumps(kpis, indent=2), encoding='utf-8')
-    pd.DataFrame({'Equity': res['equity_curve']}).to_csv(outdir / 'equity_curve.csv', index=False)
+    res['curves'].to_csv(outdir / 'equity_curve.csv', index=False)
 
     with open(outdir / 'summary.txt', 'w', encoding='utf-8') as f:
         f.write("KPIs (CI Backtest)\n")

@@ -6,6 +6,9 @@ params:
   vol_z_min: -3.0
   vol_z_max: 3.0
 
+# Proxy configurabile mostrato accanto alla strategia e al buy-and-hold equiponderato.
+benchmark_ticker: "SWDA.MI"
+
 general:
   data:
     source: "web_yahoo"

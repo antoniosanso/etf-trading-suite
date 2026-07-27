@@ -146,6 +146,8 @@ def main():
     # Liquidity
     base['ADV20']  = _last_by_ticker(_adv(eod, 20))
     base['Volume'] = _last_by_ticker(eod['Volume']) if 'Volume' in eod.columns else 0.0
+    # An actionable report needs a reference entry level, not only a rank.
+    base['Entry'] = _last_by_ticker(eod['Close'])
 
     # Merge with external features if provided (left join)
     if not feat_last.empty:
