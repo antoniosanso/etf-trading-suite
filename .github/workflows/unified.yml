@@ -2,6 +2,12 @@ name: Trading suite from validated datalake
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/unified.yml"
+      - "etf-trading-engine/**"
+      - "etf-trading-config/**"
   schedule:
     - cron: "15 17 * * 1-5"
 
