@@ -36,4 +36,20 @@ python scripts\merge_eod.py --datalake ..\etf-datalake --output data\eod.csv --r
 python examples\run_backtest.py --config ..\etf-trading-config\model.yaml --data data\eod.csv
 ```
 
+## Dashboard operativo
+
+La dashboard riunisce segnali, posizioni, KPI, confronto con benchmark e buy-and-hold
+e genera un piano operativo dimensionato per il rischio. Commissioni Fineco, spread e
+aliquota fiscale sono modificabili perché dipendono dal profilo e dalla posizione del cliente.
+
+```bash
+cd etf-trading-engine
+streamlit run dashboard.py
+```
+
+La dashboard legge gli artefatti dalla cartella `outputs/` (modificabile nella barra
+laterale): `signals/entries_today.csv`, `positions.csv`, `kpis.json` ed
+`equity_curve.csv`. Quest'ultimo può contenere le colonne `Date`, `Strategy`,
+`Benchmark` e `BuyHold`.
+
 > Nota: se il datalake GitHub è **privato**, il workflow richiederà PAT/token. Se è pubblico, parte subito.

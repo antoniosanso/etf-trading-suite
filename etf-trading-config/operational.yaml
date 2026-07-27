@@ -5,6 +5,7 @@ trading:
   sl_pct: 7
   tp_pct: 14
   p_win: 0.45
+  risk_per_trade_pct: 1.5
   horizon: "20–60 gg"
   prefer_signals: true
   tickers_override: []

@@ -8,6 +8,11 @@ import argparse, pandas as pd, numpy as np, json, sys, os
 from pathlib import Path
 from datetime import datetime, timezone
 
+ENGINE_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ENGINE_ROOT))
+from src.engine.operations import build_orders
+from src.engine.trading_costs import FinecoCosts
+
 def safe_read_csv(path, **kwargs):
     p = Path(path)
     if not p.exists():
@@ -104,6 +109,9 @@ def main():
     ap.add_argument("--data", required=True, help="CSV EOD (Date,Ticker,Open,High,Low,Close,Volume...)")
     ap.add_argument("--config", required=False, help="operational.yaml (opzionale)")
     ap.add_argument("--outdir", required=True)
+    ap.add_argument("--commission", type=float, default=19.0, help="Commissione per eseguito in EUR")
+    ap.add_argument("--spread-bps", type=float, default=10.0, help="Spread denaro-lettera in basis point")
+    ap.add_argument("--tax-rate", type=float, default=26.0, help="Aliquota sulle plusvalenze in percentuale")
     args = ap.parse_args()
 
     outdir = Path(args.outdir); outdir.mkdir(parents=True, exist_ok=True)
@@ -118,6 +126,21 @@ def main():
 
     # segnali
     entries = load_signals(Path(outdir))
+
+    # Defaults compatible with operational.yaml; missing configuration stays safe.
+    trading = {}
+    if args.config and Path(args.config).exists():
+        try:
+            import yaml
+            trading = (yaml.safe_load(Path(args.config).read_text(encoding="utf-8")) or {}).get("trading", {})
+        except Exception as e:
+            print(f"[WARN] config non parsabile: {e}", file=sys.stderr)
+    capital = float(trading.get("capital_eur", 10_000))
+    risk_pct = float(trading.get("risk_per_trade_pct", 1.5))
+    costs = FinecoCosts(args.commission, args.spread_bps, args.tax_rate / 100)
+    orders = build_orders(entries, capital, risk_pct, float(trading.get("sl_pct", 7)),
+                          float(trading.get("tp_pct", 14)), costs,
+                          int(trading.get("lines", 3)))
 
     # drawdown medio (fallback)
     dd_avg = simple_drawdown(eod)
@@ -151,6 +174,9 @@ def main():
     md.append("")
     if expected_cycle is not None:
         md.append(f"**Payoff medio atteso (TP1/Stop) sulle proposte di oggi:** ~{expected_cycle:.2f}x\n")
+    md.append("## Piano operativo\n")
+    md.append(md_table(orders, max_rows=20))
+    md.append(f"\n_Costi simulati: €{args.commission:.2f} per ordine, spread {args.spread_bps:.1f} bps, fiscalità {args.tax_rate:.1f}%. Verificare le condizioni personali._\n")
     md_text = "\n".join(md).strip() + "\n"
 
     # Write outputs
@@ -166,6 +192,7 @@ def main():
         "payoff_mean_estimate": expected_cycle
     }
     (outdir / "operational_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    orders.to_csv(outdir / "operational_orders.csv", index=False)
     print("[OK] operational_report.md scritto")
 
 if __name__ == "__main__":
