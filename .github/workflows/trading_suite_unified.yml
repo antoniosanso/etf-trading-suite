@@ -2,8 +2,6 @@ name: Trading Suite — Unified (Full Fetch → Index → Model → Persist)
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "45 15 * * 1-5"
 
 permissions:
   contents: write
@@ -60,7 +58,7 @@ jobs:
 
           echo "Compiling latest snapshot..."
           python - <<'EOF'
-          import pandas as pd, glob
+          import os, pandas as pd, glob
           files = glob.glob("data/*.csv")
           dfs = []
           for f in files:
