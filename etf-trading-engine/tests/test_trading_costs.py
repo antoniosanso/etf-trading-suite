@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from src.engine.operations import build_orders
 from src.engine.trading_costs import FinecoCosts, position_size
@@ -20,9 +21,18 @@ def test_position_size_respects_cash_and_risk():
 
 
 def test_operational_orders_have_required_levels():
-    signals = pd.DataFrame([{"Ticker": "ETF.MI", "Entry": 100, "Reason": "breakout"}])
+    signals = pd.DataFrame([{
+        "Ticker": "ETF.MI", "Entry": 100, "Stop": 94.5, "TP1": 111.25,
+        "Reason": "breakout",
+    }])
     orders = build_orders(signals, 10_000, costs=FinecoCosts(0, 0))
-    assert orders.loc[0, "Stop"] == 93
-    assert round(orders.loc[0, "Target"], 8) == 114
+    assert orders.loc[0, "Stop"] == 94.5
+    assert round(orders.loc[0, "Target"], 8) == 111.25
     assert orders.loc[0, "Quantity"] > 0
     assert "stop" in orders.loc[0, "Exit"]
+
+
+def test_operational_orders_reject_fixed_percentage_fallbacks():
+    signals = pd.DataFrame([{"Ticker": "ETF.MI", "Entry": 100}])
+    with pytest.raises(ValueError, match="strategy-calculated"):
+        build_orders(signals, 10_000, costs=FinecoCosts(0, 0))
