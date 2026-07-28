@@ -1,10 +1,5 @@
 
-params:
-  atr_pct: 1.0
-  buffer_mul: 1.0
-  buffer_mult: 1.0
-  vol_z_min: -3.0
-  vol_z_max: 3.0
+active_run: "S1_breakout"
 
 # Proxy configurabile mostrato accanto alla strategia e al buy-and-hold equiponderato.
 benchmark_ticker: "SWDA.MI"
@@ -15,8 +10,16 @@ general:
     adjusted: true
     start: "2018-01-01"
     tz_utc: true
+    strict_quality: true
+  capital_eur: 10000
   risk:
-    default_risk_per_trade_pct: 1.5
+    default_risk_per_trade_pct: 1.0
+  execution:
+    commission_fixed_eur: 2.95
+    commission_pct: 0.0
+    spread_pct: 0.20
+    slippage_pct: 0.10
+    tax_rate_pct: 26.0
   walk_forward:
     windows_yaml: "etf-trading-config/wf_windows.yaml"
     trimmed_cov_ignore_extremes: 1
@@ -37,20 +40,21 @@ runs:
   S1_breakout:
     description: "Breakout 52w +0,3% con SL -7% e TP +14%"
     universe: "etf-trading-config/universe.csv"
-    entry: {mode: "breakout_52w", buffer_pct: 0.3}
+    entry: {mode: "breakout_52w", lookback_days: 252, buffer_pct: 0.3}
     stop_loss: {mode: "percent", value_pct: 7.0}
     take_profit: {mode: "percent", value_pct: 14.0}
     exit: {break_even_after_tp1: false}
     guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 35.0, wf_calmar_cov_max_pct: 30.0}
 
   S2_multilayer:
-    description: "Core (scalato) + Tattico (S1)"
+    description: "Core su tre tranche indipendenti + tattico breakout"
     universe: "etf-trading-config/universe.csv"
+    capital_weights: {core_pct: 70.0, tactical_pct: 30.0}
     core:
       scaling_tranches:
         - {mode: "market_now", weight_pct: 33.0}
-        - {mode: "pullback_dma", dmas: [20, 50], weight_pct: 33.0}
-        - {mode: "breakout_52w", buffer_pct: 0.3, weight_pct: 34.0}
+        - {mode: "pullback_dma", dmas: [20, 50], weight_pct: 33.0, tolerance_atr: 0.35, rsi_min: 30, rsi_max: 55, stop_atr_multiplier: 0.60}
+        - {mode: "multi_horizon_breakout", lookback_days: [63, 126, 252], min_confirmations: 2, buffer_pct: 0.3, stop_pct: 10.0, weight_pct: 34.0}
       trailing_pct_by_ticker: {TNOW.MI: 12.0, XAIX.MI: 15.0, default: 12.0}
     tactical:
       entry: {mode: "breakout_52w", buffer_pct: 0.3}
@@ -71,3 +75,50 @@ runs:
       regime: {market_above_ma200: "SWDA.MI", sector_above_ma200: "IXN"}
       breadth: {proxy: "QQQ", rule: "close_above_ma", ma_period: 50}
     guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 35.0, wf_calmar_cov_max_pct: 30.0}
+
+  S4_channel_rebound:
+    description: "Rimbalzo confermato dal bordo inferiore di un canale discendente"
+    universe: "etf-trading-config/universe.csv"
+    entry:
+      mode: "descending_channel_rebound"
+      lookback_days: 45
+      lower_band_tolerance_atr: 0.35
+      min_channel_score: 0.70
+      confirmation: "close_above_reversal_high"
+    stop_loss: {mode: "below_channel_atr", atr_multiplier: 0.60}
+    take_profit: {tp1: "channel_midline", tp2: "channel_upper_band"}
+    risk: {risk_per_trade_pct: 0.50}
+    guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 20.0, wf_calmar_cov_max_pct: 30.0}
+
+  S5_trend_pullback:
+    description: "Pullback confermato verso EMA20/SMA50 in trend rialzista"
+    universe: "etf-trading-config/universe.csv"
+    entry:
+      {mode: "trend_pullback", tolerance_atr: 0.35, rsi_min: 30, rsi_max: 55,
+       sma50_slope_min: 0.0}
+    stop_loss: {mode: "signal_low_atr", atr_multiplier: 0.60}
+    take_profit: {mode: "percent", value_pct: 12.0, tp2_atr_multiple: 3.0}
+    risk: {risk_per_trade_pct: 0.75}
+    guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 25.0, wf_calmar_cov_max_pct: 30.0}
+
+  S6_multi_horizon_breakout:
+    description: "Breakout con consenso fra più orizzonti e filtro di trend"
+    universe: "etf-trading-config/universe.csv"
+    entry:
+      {mode: "multi_horizon_breakout", lookback_days: [20, 63, 126, 252],
+       min_confirmations: 2, buffer_pct: 0.3, trend_filter: true}
+    stop_loss: {mode: "percent", value_pct: 7.0}
+    take_profit: {mode: "percent", value_pct: 14.0}
+    risk: {risk_per_trade_pct: 1.0}
+    guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 30.0, wf_calmar_cov_max_pct: 30.0}
+
+  S7_shock_reversion:
+    description: "Mean reversion confermata dopo shock ribassista estremo"
+    universe: "etf-trading-config/universe.csv"
+    entry:
+      {mode: "shock_reversion", shock_window_days: 5, shock_atr_multiple: 2.5,
+       close_z_max: -1.5, rsi_max: 35, confirmation: "close_above_reversal_high"}
+    stop_loss: {mode: "signal_low_atr", atr_multiplier: 0.60}
+    take_profit: {mode: "moving_average", field: "EMA20", fallback_atr_multiple: 1.5, tp2_atr_multiple: 3.0}
+    risk: {risk_per_trade_pct: 0.50}
+    guardrails: {sharpe_min: 0.20, profit_factor_min: 1.05, maxdd_abs_max_pct: 20.0, wf_calmar_cov_max_pct: 35.0}

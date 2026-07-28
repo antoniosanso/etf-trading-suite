@@ -1,32 +1,45 @@
 windows:
   - name: "WF_2019"
+    train_start: "2016-01-01"
+    train_end:   "2018-12-31"
     test_start: "2019-01-01"
     test_end:   "2019-12-31"
 
   - name: "WF_2020"
+    train_start: "2017-01-01"
+    train_end:   "2019-12-31"
     test_start: "2020-01-01"
     test_end:   "2020-12-31"
 
   - name: "WF_2021"
+    train_start: "2018-01-01"
+    train_end:   "2020-12-31"
     test_start: "2021-01-01"
     test_end:   "2021-12-31"
 
   - name: "WF_2022"
+    train_start: "2019-01-01"
+    train_end:   "2021-12-31"
     test_start: "2022-01-01"
     test_end:   "2022-12-31"
 
   - name: "WF_2023"
+    train_start: "2020-01-01"
+    train_end:   "2022-12-31"
     test_start: "2023-01-01"
     test_end:   "2023-12-31"
 
   - name: "WF_2024"
+    train_start: "2021-01-01"
+    train_end:   "2023-12-31"
     test_start: "2024-01-01"
     test_end:   "2024-12-31"
 
   - name: "WF_2025"
+    train_start: "2022-01-01"
+    train_end:   "2024-12-31"
     test_start: "2025-01-01"
     test_end:   "2025-12-31"
 
 trim_extremes: 1
 cov_threshold_pct: 30.0
-
