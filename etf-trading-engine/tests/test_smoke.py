@@ -150,6 +150,42 @@ def test_event_backtest_returns_trade_ledger_and_kpis():
     assert all(t["quantity"] == int(t["quantity"]) for t in out["trades"])
 
 
+def test_backtest_does_not_split_capital_across_the_whole_universe():
+    raw = pd.concat([
+        prices().assign(Ticker="ONE.MI"),
+        prices().assign(Ticker="TWO.MI"),
+        prices().assign(Ticker="THREE.MI"),
+        prices().assign(Ticker="FOUR.MI"),
+    ], ignore_index=True)
+    cfg = config()
+    cfg["general"]["selection"] = {"max_positions": 2}
+    out = run_backtest(raw, cfg)
+    for date in pd.bdate_range("2024-01-01", periods=320):
+        concurrent = sum(
+            pd.Timestamp(trade["entry_date"]) <= date <= pd.Timestamp(trade["exit_date"])
+            for trade in out["trades"]
+        )
+        assert concurrent <= 2
+    # The old universe-wide split (€2,500 per ticker) bought only 3 units.
+    assert max(trade["quantity"] for trade in out["trades"]) > 3
+
+
+def test_latest_orders_are_ranked_and_limited_to_best_signals():
+    raw = pd.concat([
+        prices(start=100).assign(Ticker="ONE.MI"),
+        prices(start=80).assign(Ticker="TWO.MI"),
+        prices(start=60).assign(Ticker="THREE.MI"),
+        prices(start=40).assign(Ticker="FOUR.MI"),
+    ], ignore_index=True)
+    cfg = config()
+    cfg["general"]["selection"] = {
+        "max_positions": 2, "max_allocation_per_position_pct": 60,
+    }
+    out = run_backtest(raw, cfg)
+    assert len(out["orders"]) == 2
+    assert sum(order["Size"] * order["Entry"] for order in out["orders"]) <= 10_000
+
+
 def test_s3_builds_point_in_time_context_and_executes():
     cfg = config("S3_breakout_checklist")
     out = run_backtest(prices(), cfg)

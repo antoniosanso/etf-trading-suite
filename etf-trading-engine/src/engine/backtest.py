@@ -272,15 +272,82 @@ def _simulate_ticker(df: pd.DataFrame, ticker: str, name: str, cfg: dict,
 def _single_run(prices: pd.DataFrame, name: str, cfg: dict, general: dict) -> dict:
     initial = float(general.get("capital_eur", 10000.0))
     tickers = prices["Ticker"].dropna().unique().tolist()
-    allocation = initial / max(1, len(tickers))
-    curves, trades = [], []
+    selection = general.get("selection", {})
+    max_positions = max(1, int(selection.get("max_positions", 3)))
+    # Analyse the complete universe, but never reserve cash for instruments
+    # which did not produce a signal. Each candidate is simulated with the
+    # capital available to one concentrated portfolio slot.
+    allocation = initial / min(max_positions, max(1, len(tickers)))
+    candidate_trades = []
+    signal_scores = {}
     for ticker in tickers:
         data = prices.loc[prices["Ticker"] == ticker].sort_values("Date")
-        curve, ticker_trades = _simulate_ticker(data, ticker, name, cfg, general, allocation)
-        curves.append(curve)
-        trades.extend(ticker_trades)
-    curve_df = pd.concat(curves, axis=1).sort_index().ffill()
-    equity = curve_df.sum(axis=1)
+        _, ticker_trades = _simulate_ticker(data, ticker, name, cfg, general, allocation)
+        if ticker_trades:
+            enriched = enrich(data.reset_index(drop=True))
+            for trade in ticker_trades:
+                entry_pos = enriched.index[
+                    pd.to_datetime(enriched["Date"]) == pd.Timestamp(trade.entry_date)
+                ]
+                signal_pos = max(0, int(entry_pos[0]) - 1) if len(entry_pos) else 0
+                row = enriched.iloc[signal_pos]
+                trend_strength = (
+                    float(row.Close) / max(float(row.SMA50), 1e-12) - 1
+                    if math.isfinite(float(row.SMA50)) else 0.0
+                )
+                volume_score = (
+                    max(-3.0, min(3.0, float(row.VolZ20))) / 100
+                    if math.isfinite(float(row.VolZ20)) else 0.0
+                )
+                signal_scores[id(trade)] = trend_strength + volume_score
+            candidate_trades.extend(ticker_trades)
+
+    # Select entries chronologically. On each day only information known at
+    # the preceding close is used; future P&L never participates in ranking.
+    trades = []
+    for entry_date in sorted({trade.entry_date for trade in candidate_trades}):
+        occupied = sum(
+            trade.entry_date <= entry_date <= trade.exit_date for trade in trades
+        )
+        slots = max(0, max_positions - occupied)
+        same_day = [
+            trade for trade in candidate_trades if trade.entry_date == entry_date
+        ]
+        same_day.sort(
+            key=lambda trade: (-signal_scores[id(trade)], trade.ticker)
+        )
+        trades.extend(same_day[:slots])
+
+    # No valid signal means the portfolio remains entirely in cash.
+    close_frame = prices.pivot_table(
+        index="Date", columns="Ticker", values="Close", aggfunc="last"
+    ).sort_index().ffill()
+    close_frame.index = pd.to_datetime(close_frame.index)
+    costs = _costs(general)
+    cash = initial
+    active_positions = {}
+    equity_values = []
+    entries_by_date = {}
+    exits_by_date = {}
+    for trade in trades:
+        entries_by_date.setdefault(pd.Timestamp(trade.entry_date), []).append(trade)
+        exits_by_date.setdefault(pd.Timestamp(trade.exit_date), []).append(trade)
+    for date, closes in close_frame.iterrows():
+        for trade in entries_by_date.get(date, []):
+            entry_cost = _commission(trade.entry * trade.quantity, costs)
+            cash -= trade.entry * trade.quantity + entry_cost
+            active_positions[id(trade)] = trade
+        for trade in exits_by_date.get(date, []):
+            if id(trade) in active_positions:
+                entry_cost = _commission(trade.entry * trade.quantity, costs)
+                cash += trade.entry * trade.quantity + entry_cost + trade.pnl
+                active_positions.pop(id(trade))
+        market_value = sum(
+            trade.quantity * float(closes.get(trade.ticker, trade.entry))
+            for trade in active_positions.values()
+        )
+        equity_values.append(cash + market_value)
+    equity = pd.Series(equity_values, index=close_frame.index)
     evaluation = general.get("evaluation", {})
     if evaluation.get("start"):
         equity = equity.loc[equity.index >= pd.Timestamp(evaluation["start"])]
@@ -303,10 +370,6 @@ def _single_run(prices: pd.DataFrame, name: str, cfg: dict, general: dict) -> di
         "AmbiguousBars": sum(t.ambiguous_bar for t in trades),
     }
     benchmark_ticker = general.get("benchmark_ticker", "SWDA.MI")
-    close_frame = prices.pivot_table(
-        index="Date", columns="Ticker", values="Close", aggfunc="last"
-    ).sort_index().ffill()
-    close_frame.index = pd.to_datetime(close_frame.index)
     close_frame = close_frame.reindex(equity.index).ffill().bfill()
     normalized = close_frame.div(close_frame.iloc[0]).mul(initial / max(1, len(close_frame.columns)))
     buy_hold = normalized.sum(axis=1)
@@ -421,6 +484,11 @@ def latest_orders(prices: pd.DataFrame, name: str, cfg: dict, general: dict) -> 
         "risk_per_trade_pct",
         general.get("risk", {}).get("default_risk_per_trade_pct", 1.0)
     )) / 100
+    selection = general.get("selection", {})
+    max_positions = max(1, int(selection.get("max_positions", 3)))
+    max_allocation_pct = float(
+        selection.get("max_allocation_per_position_pct", 100 / max_positions)
+    )
     for ticker, raw in prices.groupby("Ticker"):
         df = enrich(raw.sort_values("Date").reset_index(drop=True))
         signal = _strategy_signals(df, name, cfg)
@@ -475,9 +543,25 @@ def latest_orders(prices: pd.DataFrame, name: str, cfg: dict, general: dict) -> 
             "Stop": stop, "TP1": tp1, "TP2": tp2, "Size": size,
             "RiskRewardTP1": (tp1 - entry) / risk_share,
             "RiskRewardTP2": (tp2 - entry) / risk_share,
+            "Score": (
+                ((tp1 - entry) / risk_share) *
+                max(0.0, float(row.Close) / max(float(row.SMA50), 1e-12) - 1.0)
+            ),
             "Reason": reason,
         })
-    return orders
+    ranked = sorted(
+        orders,
+        key=lambda order: (-order["Score"], -order["RiskRewardTP1"], order["Ticker"]),
+    )[:max_positions]
+    remaining_cash = capital
+    for order in ranked:
+        affordable = math.floor(
+            min(remaining_cash, capital * max_allocation_pct / 100) /
+            max(order["Entry"], 1e-12)
+        )
+        order["Size"] = min(order["Size"], max(0, affordable))
+        remaining_cash -= order["Size"] * order["Entry"]
+    return [order for order in ranked if order["Size"] > 0]
 
 
 def run_backtest(prices: pd.DataFrame, config: dict) -> dict:

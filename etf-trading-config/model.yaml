@@ -12,6 +12,9 @@ general:
     tz_utc: true
     strict_quality: true
   capital_eur: 10000
+  selection:
+    max_positions: 3
+    max_allocation_per_position_pct: 50.0
   risk:
     default_risk_per_trade_pct: 1.0
   execution:
