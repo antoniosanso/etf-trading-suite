@@ -71,6 +71,30 @@ jobs:
             --data etf-trading-engine/data/eod.csv \
             --outdir outputs
 
+      - name: Out-of-sample economic validation
+        env:
+          PYTHONPATH: ${{ github.workspace }}/etf-trading-engine
+        run: |
+          python etf-trading-engine/scripts/walk_forward.py \
+            --config etf-trading-config/model.yaml \
+            --data etf-trading-engine/data/eod.csv \
+            --windows etf-trading-config/wf_windows.yaml \
+            --outdir outputs/walk_forward \
+            --all-strategies
+          python etf-trading-engine/scripts/economic_gate.py \
+            --walk-forward outputs/walk_forward/wf_report.json \
+            --output outputs/economic_validation.json
+
+      - name: Build fail-closed operational proposals
+        env:
+          PYTHONPATH: ${{ github.workspace }}/etf-trading-engine
+        run: |
+          python etf-trading-engine/scripts/operational_report.py \
+            --data etf-trading-engine/data/eod.csv \
+            --config etf-trading-config/operational.yaml \
+            --validation outputs/economic_validation.json \
+            --outdir outputs
+
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
