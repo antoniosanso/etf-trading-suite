@@ -107,6 +107,82 @@ def shock_reversion_entries(df: pd.DataFrame, cfg: dict) -> pd.Series:
     return confirmation.fillna(False)
 
 
+def false_breakdown_reclaim_entries(df: pd.DataFrame, cfg: dict) -> pd.Series:
+    """Reclaim of a previously established support after a downside break.
+
+    Support and touch counts are shifted by one bar, so the level being tested
+    never uses the breakdown or confirmation bar. A reclaim may happen on the
+    breakdown bar itself or within ``max_reclaim_days`` subsequent bars.
+    Diagnostic columns are attached to ``df`` for stop/target generation.
+    """
+    lookback = int(cfg.get("support_lookback_days", 63))
+    min_periods = int(cfg.get("support_min_periods", max(20, lookback // 2)))
+    quantile = float(cfg.get("support_quantile", 0.10))
+    min_touches = int(cfg.get("min_support_touches", 2))
+    touch_tolerance = float(cfg.get("touch_tolerance_atr", 0.50))
+    break_buffer = float(cfg.get("break_buffer_atr", 0.10))
+    reclaim_buffer = float(cfg.get("reclaim_buffer_atr", 0.0))
+    max_reclaim_days = int(cfg.get("max_reclaim_days", 3))
+    min_close_location = float(cfg.get("min_close_location", 0.60))
+    if not (2 <= lookback and 1 <= min_periods <= lookback):
+        raise ValueError("Invalid false-breakdown support window")
+    if not (0.0 <= quantile <= 0.5) or min_touches < 1 or max_reclaim_days < 0:
+        raise ValueError("Invalid false-breakdown configuration")
+
+    prior_low = df["Low"].shift(1)
+    support = prior_low.rolling(lookback, min_periods=min_periods).quantile(quantile)
+    # Count only contacts known before the current bar.
+    distance = (prior_low - support).abs()
+    touches = distance.le(touch_tolerance * df["ATR14"].shift(1)).rolling(
+        lookback, min_periods=min_periods
+    ).sum()
+    bar_range = (df["High"] - df["Low"]).replace(0, np.nan)
+    close_location = (df["Close"] - df["Low"]) / bar_range
+
+    signals = pd.Series(False, index=df.index)
+    frozen_support = pd.Series(np.nan, index=df.index, dtype=float)
+    breakdown_low = pd.Series(np.nan, index=df.index, dtype=float)
+    active_support = np.nan
+    active_low = np.nan
+    age = -1
+
+    for i in range(len(df)):
+        atr_i = float(df["ATR14"].iloc[i]) if pd.notna(df["ATR14"].iloc[i]) else np.nan
+        support_i = float(support.iloc[i]) if pd.notna(support.iloc[i]) else np.nan
+        qualified = (
+            np.isfinite(atr_i) and np.isfinite(support_i) and
+            touches.iloc[i] >= min_touches
+        )
+        broke = qualified and float(df["Low"].iloc[i]) <= support_i - break_buffer * atr_i
+        if broke and age < 0:
+            active_support = support_i
+            active_low = float(df["Low"].iloc[i])
+            age = 0
+        elif age >= 0:
+            age += 1
+            active_low = min(active_low, float(df["Low"].iloc[i]))
+
+        if age >= 0:
+            reclaimed = (
+                age <= max_reclaim_days and
+                float(df["Close"].iloc[i]) >= active_support + reclaim_buffer * atr_i and
+                close_location.iloc[i] >= min_close_location
+            )
+            if bool(cfg.get("require_bullish_close", False)):
+                reclaimed = reclaimed and float(df["Close"].iloc[i]) > float(df["Open"].iloc[i])
+            if reclaimed:
+                signals.iloc[i] = True
+                frozen_support.iloc[i] = active_support
+                breakdown_low.iloc[i] = active_low
+                age = -1
+            elif age > max_reclaim_days:
+                age = -1
+
+    df["FalseBreakdownSupport"] = frozen_support
+    df["FalseBreakdownLow"] = breakdown_low
+    return signals.fillna(False)
+
+
 def descending_channel(df: pd.DataFrame, lookback: int = 45) -> pd.DataFrame:
     """Rolling robust-ish channel based on OLS residual quantiles.
 
