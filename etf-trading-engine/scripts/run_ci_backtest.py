@@ -14,12 +14,38 @@ def main():
     prices = pd.read_csv(args.data)
     prices['Date'] = pd.to_datetime(prices['Date'], utc=True).dt.tz_localize(None)
 
-    res = run_backtest(prices, cfg)
-    kpis = res['kpis']
-
     outdir = Path(args.outdir); outdir.mkdir(parents=True, exist_ok=True)
+    res = run_backtest(prices, cfg)
+    if 'runs' in res:
+        # active_run=all is useful for research; keep one stable artifact per run.
+        all_trades, all_orders = [], []
+        for name, run in res['runs'].items():
+            (outdir / f'kpis_{name}.json').write_text(
+                json.dumps(run['kpis'], indent=2), encoding='utf-8')
+            for trade in run.get('trades', []):
+                all_trades.append({**trade, 'Run': name})
+            for order in run.get('orders', []):
+                all_orders.append({**order, 'Run': name})
+        kpis = {name: run['kpis'] for name, run in res['runs'].items()}
+        equity_curve = []
+        trades, orders = all_trades, all_orders
+    else:
+        kpis = res['kpis']
+        equity_curve = res['equity_curve']
+        trades, orders = res.get('trades', []), res.get('orders', [])
+
     (outdir / 'kpis.json').write_text(json.dumps(kpis, indent=2), encoding='utf-8')
-    res['curves'].to_csv(outdir / 'equity_curve.csv', index=False)
+    if 'curves' in res:
+        res['curves'].to_csv(outdir / 'equity_curve.csv', index=False)
+    else:
+        pd.DataFrame({'Equity': equity_curve}).to_csv(
+            outdir / 'equity_curve.csv', index=False)
+    pd.DataFrame(trades).to_csv(outdir / 'trades.csv', index=False)
+    signals_dir = outdir / 'signals'; signals_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(orders).to_csv(
+        signals_dir / 'entries_today.csv', index=False)
+    (outdir / 'data_quality.json').write_text(
+        json.dumps(res.get('data_quality', {}), indent=2), encoding='utf-8')
 
     with open(outdir / 'summary.txt', 'w', encoding='utf-8') as f:
         f.write("KPIs (CI Backtest)\n")
