@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 ENGINE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ENGINE_ROOT))
 from src.engine.operations import build_orders
+from src.engine.safety import data_is_fresh, load_economic_validation
 from src.engine.trading_costs import FinecoCosts
 
 def safe_read_csv(path, **kwargs):
@@ -109,6 +110,8 @@ def main():
     ap.add_argument("--data", required=True, help="CSV EOD (Date,Ticker,Open,High,Low,Close,Volume...)")
     ap.add_argument("--config", required=False, help="operational.yaml (opzionale)")
     ap.add_argument("--outdir", required=True)
+    ap.add_argument("--validation", required=True,
+                    help="Fresh economic validation JSON; missing/failed means zero proposals")
     ap.add_argument("--commission", type=float, default=19.0, help="Commissione per eseguito in EUR")
     ap.add_argument("--spread-bps", type=float, default=10.0, help="Spread denaro-lettera in basis point")
     ap.add_argument("--tax-rate", type=float, default=26.0, help="Aliquota sulle plusvalenze in percentuale")
@@ -136,11 +139,27 @@ def main():
         except Exception as e:
             print(f"[WARN] config non parsabile: {e}", file=sys.stderr)
     capital = float(trading.get("capital_eur", 10_000))
-    risk_pct = float(trading.get("risk_per_trade_pct", 1.5))
+    risk_pct = float(trading.get("risk_per_trade_pct", 1.0))
     costs = FinecoCosts(args.commission, args.spread_bps, args.tax_rate / 100)
-    orders = build_orders(entries, capital, risk_pct, float(trading.get("sl_pct", 7)),
-                          float(trading.get("tp_pct", 14)), costs,
-                          int(trading.get("lines", 3)))
+    validation = load_economic_validation(
+        args.validation, int(trading.get("validation_max_age_days", 7)))
+    fresh, freshness_reason = data_is_fresh(
+        eod, int(trading.get("max_data_age_days", 5)))
+    if validation.get("status") == "PASS" and fresh:
+        orders = build_orders(
+            entries, capital, risk_pct, costs,
+            int(trading.get("max_positions", 3)),
+            float(trading.get("max_allocation_per_position_pct", 50)),
+            float(trading.get("max_total_risk_pct", 3)),
+            set(validation.get("approved_strategies", [])),
+            proposal_only=True,
+        )
+        operational_status = "PROPOSAL_ONLY"
+        blocked_reason = None
+    else:
+        orders = build_orders(pd.DataFrame(), capital)
+        operational_status = "BLOCKED"
+        blocked_reason = validation.get("reason") if validation.get("status") != "PASS" else freshness_reason
 
     # drawdown medio (fallback)
     dd_avg = simple_drawdown(eod)
@@ -160,6 +179,9 @@ def main():
     ts_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     md = []
     md.append(f"# Operational Report — {ts_utc}\n")
+    md.append(f"- Stato operativo: **{operational_status}**")
+    if blocked_reason:
+        md.append(f"- Motivo del blocco: **{blocked_reason}**")
     md.append(f"- Universe: **{universe_n}** ticker")
     if last_dt is not None:
         md.append(f"- Ultima data EOD: **{last_dt.date()}**")
@@ -190,6 +212,9 @@ def main():
         "drawdown_avg": dd_avg,
         "signals_rows": int(entries.shape[0]) if not entries.empty else 0,
         "payoff_mean_estimate": expected_cycle
+        ,"operational_status": operational_status
+        ,"blocked_reason": blocked_reason
+        ,"approved_strategies": validation.get("approved_strategies", [])
     }
     (outdir / "operational_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     orders.to_csv(outdir / "operational_orders.csv", index=False)
