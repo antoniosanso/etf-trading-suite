@@ -122,3 +122,17 @@ runs:
     take_profit: {mode: "moving_average", field: "EMA20", fallback_atr_multiple: 1.5, tp2_atr_multiple: 3.0}
     risk: {risk_per_trade_pct: 0.50}
     guardrails: {sharpe_min: 0.20, profit_factor_min: 1.05, maxdd_abs_max_pct: 20.0, wf_calmar_cov_max_pct: 35.0}
+
+  S8_false_breakdown_reclaim:
+    description: "Recupero rapido di un supporto storico dopo una falsa rottura ribassista"
+    universe: "etf-trading-config/universe.csv"
+    entry:
+      {mode: "false_breakdown_reclaim", support_lookback_days: 63,
+       support_min_periods: 40, support_quantile: 0.10, min_support_touches: 2,
+       touch_tolerance_atr: 0.50, break_buffer_atr: 0.10,
+       reclaim_buffer_atr: 0.0, max_reclaim_days: 3,
+       min_close_location: 0.60, require_bullish_close: false}
+    stop_loss: {mode: "breakdown_low_atr", atr_multiplier: 0.25}
+    take_profit: {mode: "moving_average", field: "EMA20", fallback_atr_multiple: 2.0, tp2_atr_multiple: 3.0}
+    risk: {risk_per_trade_pct: 0.50}
+    guardrails: {sharpe_min: 0.20, profit_factor_min: 1.05, maxdd_abs_max_pct: 20.0, wf_calmar_cov_max_pct: 35.0}

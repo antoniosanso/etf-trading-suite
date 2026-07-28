@@ -11,7 +11,7 @@ from .metrics import sharpe, max_drawdown, calmar, profit_factor
 from .strategy import (
     enrich, breakout_entries, channel_rebound_entries,
     multi_horizon_breakout_entries, trend_pullback_entries,
-    shock_reversion_entries,
+    shock_reversion_entries, false_breakdown_reclaim_entries,
 )
 
 
@@ -106,6 +106,8 @@ def _strategy_signals(df: pd.DataFrame, name: str, cfg: dict) -> pd.Series:
         return multi_horizon_breakout_entries(df, cfg.get("entry", {}))
     if name == "S7_shock_reversion":
         return shock_reversion_entries(df, cfg.get("entry", {}))
+    if name == "S8_false_breakdown_reclaim":
+        return false_breakdown_reclaim_entries(df, cfg.get("entry", {}))
     raise ValueError(f"Unsupported run: {name}")
 
 
@@ -147,6 +149,9 @@ def _simulate_ticker(df: pd.DataFrame, ticker: str, name: str, cfg: dict,
             elif stop_cfg and stop_cfg.get("mode") == "signal_low_atr":
                 stop = float(df.loc[i - 1, "Low"]) - \
                     float(stop_cfg.get("atr_multiplier", 0.5)) * float(df.loc[i - 1, "ATR14"])
+            elif stop_cfg and stop_cfg.get("mode") == "breakdown_low_atr":
+                stop = float(df.loc[i - 1, "FalseBreakdownLow"]) - \
+                    float(stop_cfg.get("atr_multiplier", 0.25)) * float(df.loc[i - 1, "ATR14"])
             else:
                 stop = math.nan
             if tp_cfg and tp_cfg.get("mode") == "percent":
@@ -311,6 +316,18 @@ def latest_orders(prices: pd.DataFrame, name: str, cfg: dict, general: dict) -> 
                 tp1 = entry * (1 + float(tp_cfg.get("value_pct", 10.0)) / 100)
             tp2 = entry + float(tp_cfg.get("tp2_atr_multiple", 3.0)) * float(row.ATR14)
             reason = str(cfg.get("entry", {}).get("mode", name))
+        elif cfg.get("stop_loss", {}).get("mode") == "breakdown_low_atr":
+            stop = float(row.FalseBreakdownLow) - float(
+                cfg["stop_loss"].get("atr_multiplier", 0.25)
+            ) * float(row.ATR14)
+            tp_cfg = cfg.get("take_profit", {})
+            tp1 = float(row[str(tp_cfg.get("field", "EMA20"))])
+            if tp1 <= entry:
+                tp1 = entry + float(
+                    tp_cfg.get("fallback_atr_multiple", 2.0)
+                ) * float(row.ATR14)
+            tp2 = entry + float(tp_cfg.get("tp2_atr_multiple", 3.0)) * float(row.ATR14)
+            reason = "confirmed_false_breakdown_reclaim"
         else:
             stop = entry * (1 - float(cfg["stop_loss"]["value_pct"]) / 100)
             tp1 = entry * (1 + float(cfg["take_profit"]["value_pct"]) / 100)
