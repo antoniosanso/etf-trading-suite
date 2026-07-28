@@ -63,17 +63,16 @@ runs:
     guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 35.0, wf_calmar_cov_max_pct: 30.0}
 
   S3_breakout_checklist:
-    description: "Breakout 52w + filtri (NAV P/D, spread, stagionalità, regime, breadth)"
+    description: "Breakout 52w confermato da trend, regime, breadth e liquidità point-in-time"
     universe: "etf-trading-config/universe.csv"
     entry: {mode: "breakout_52w", buffer_pct: 0.3}
     stop_loss: {mode: "adaptive_atr_structure", lookback_days: 20, atr_multiple: 2.5, structure_buffer_atr: 0.25}
     take_profit: {mode: "adaptive_risk_atr", risk_multiple: 2.0, min_atr_multiple: 3.0}
     filters:
-      nav_premium_abs_max_pct: 0.5
-      spread_median_max_pct: 0.25
-      seasonality_months_on: [11, 12, 1, 2, 3, 4]
-      regime: {market_above_ma200: "SWDA.MI", sector_above_ma200: "IXN"}
-      breadth: {proxy: "QQQ", rule: "close_above_ma", ma_period: 50}
+      trend: {ma_period: 200, require_positive_sma50_slope: true}
+      regime: {benchmark: "SWDA.MI", ma_period: 200}
+      breadth: {ma_period: 200, min_fraction_above_ma: 0.55, min_eligible_etfs: 30}
+      liquidity: {adv_window: 20, min_adv_eur: 100000, max_zero_volume_fraction: 0.20}
     guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 35.0, wf_calmar_cov_max_pct: 30.0}
 
   S4_channel_rebound:
