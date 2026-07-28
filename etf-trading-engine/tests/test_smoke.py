@@ -1,4 +1,4 @@
-from src.engine.backtest import run_backtest, validate_prices
+from src.engine.backtest import run_backtest, validate_prices, _add_s3_context
 from src.engine.metrics import sharpe, max_drawdown, calmar, profit_factor
 from src.engine.strategy import (
     breakout_entries, channel_rebound_entries, enrich,
@@ -58,6 +58,25 @@ def config(active="S1_breakout"):
                     "entry": {"lookback_days": 20, "buffer_pct": 0},
                     "stop_loss": {"mode": "percent", "value_pct": 7},
                     "take_profit": {"mode": "percent", "value_pct": 14},
+                },
+            },
+            "S3_breakout_checklist": {
+                "entry": {"lookback_days": 20, "buffer_pct": 0},
+                "stop_loss": {"mode": "adaptive_atr_structure",
+                              "lookback_days": 20, "atr_multiple": 2.5,
+                              "structure_buffer_atr": 0.25},
+                "take_profit": {"mode": "adaptive_risk_atr",
+                                "risk_multiple": 2.0,
+                                "min_atr_multiple": 3.0},
+                "filters": {
+                    "trend": {"ma_period": 20,
+                              "require_positive_sma50_slope": False},
+                    "regime": {"benchmark": "TEST.MI", "ma_period": 20},
+                    "breadth": {"ma_period": 20,
+                                "min_fraction_above_ma": 0.5,
+                                "min_eligible_etfs": 1},
+                    "liquidity": {"adv_window": 5, "min_adv_eur": 1000,
+                                  "max_zero_volume_fraction": 0.2},
                 },
             },
             "S4_channel_rebound": {
@@ -129,6 +148,35 @@ def test_event_backtest_returns_trade_ledger_and_kpis():
     assert set(("kpis", "trades", "equity_curve", "data_quality")) <= set(out)
     assert out["kpis"]["Trades"] >= 1
     assert all(t["quantity"] == int(t["quantity"]) for t in out["trades"])
+
+
+def test_s3_builds_point_in_time_context_and_executes():
+    cfg = config("S3_breakout_checklist")
+    out = run_backtest(prices(), cfg)
+    assert out["active_run"] == "S3_breakout_checklist"
+    assert out["kpis"]["Trades"] >= 1
+
+
+def test_s3_liquidity_filter_blocks_illiquid_etf():
+    raw = prices()
+    raw["Volume"] = 0
+    cfg = config("S3_breakout_checklist")
+    out = run_backtest(raw, cfg)
+    assert out["kpis"]["Trades"] == 0
+
+
+def test_s3_context_has_no_future_leakage():
+    cfg = config("S3_breakout_checklist")["runs"]["S3_breakout_checklist"]
+    raw = prices(100)
+    first = _add_s3_context(raw, cfg, "TEST.MI")
+    changed = raw.copy()
+    changed.loc[changed.index[-1], "Close"] *= 10
+    changed.loc[changed.index[-1], "High"] = changed.loc[
+        changed.index[-1], "Close"
+    ] + 1
+    second = _add_s3_context(changed, cfg, "TEST.MI")
+    cols = ["S3TrendOK", "S3RegimeOK", "S3BreadthOK", "S3LiquidityOK"]
+    pd.testing.assert_frame_equal(first.loc[:-2, cols], second.loc[:-2, cols])
 
 
 def test_channel_strategy_does_not_buy_unconfirmed_fall():
@@ -228,7 +276,8 @@ def test_false_breakdown_does_not_reclaim_after_expiry():
 
 
 @pytest.mark.parametrize("active", [
-    "S5_trend_pullback", "S6_multi_horizon_breakout", "S7_shock_reversion",
+    "S3_breakout_checklist", "S5_trend_pullback",
+    "S6_multi_horizon_breakout", "S7_shock_reversion",
     "S8_false_breakdown_reclaim",
 ])
 def test_new_strategies_execute(active):
