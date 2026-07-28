@@ -122,8 +122,21 @@ def _strategy_signals(df: pd.DataFrame, name: str, cfg: dict) -> pd.Series:
     if name in {"S1_breakout", "S3_breakout_checklist"}:
         entry = cfg.get("entry", {})
         lookback = int(entry.get("lookback_days", 252))
-        return breakout_entries(df, lookback, float(entry.get("buffer_pct", 0.3)),
-                                entry.get("volume_z_min"))
+        signal = breakout_entries(
+            df, lookback, float(entry.get("buffer_pct", 0.3)),
+            entry.get("volume_z_min"),
+        )
+        if name == "S3_breakout_checklist":
+            required = {
+                "S3TrendOK", "S3RegimeOK", "S3BreadthOK", "S3LiquidityOK",
+            }
+            missing = required - set(df.columns)
+            if missing:
+                raise ValueError(
+                    "S3 market context missing: " + ", ".join(sorted(missing))
+                )
+            signal &= df[list(sorted(required))].all(axis=1)
+        return signal.fillna(False)
     if name == "S4_channel_rebound":
         return channel_rebound_entries(df, cfg.get("entry", {}))
     if name in {"S5_trend_pullback", "S2_core_pullback"}:
@@ -311,6 +324,93 @@ def _single_run(prices: pd.DataFrame, name: str, cfg: dict, general: dict) -> di
             "orders": latest_orders(prices, name, cfg, general)}
 
 
+def _add_s3_context(prices: pd.DataFrame, cfg: dict,
+                    benchmark_ticker: str) -> pd.DataFrame:
+    """Build point-in-time S3 filters from the validated OHLCV universe.
+
+    Historical NAV premiums and quoted bid/ask spreads cannot be reconstructed
+    from OHLCV data. S3 therefore uses transparent, reproducible proxies that
+    are known on each date: trend, benchmark regime, cross-sectional breadth,
+    and trailing traded-value liquidity.
+    """
+    out = prices.sort_values(["Ticker", "Date"]).copy()
+    filters = cfg.get("filters", {})
+    trend_cfg = filters.get("trend", {})
+    regime_cfg = filters.get("regime", {})
+    breadth_cfg = filters.get("breadth", {})
+    liquidity_cfg = filters.get("liquidity", {})
+
+    trend_ma = int(trend_cfg.get("ma_period", 200))
+    breadth_ma = int(breadth_cfg.get("ma_period", 200))
+    regime_ma = int(regime_cfg.get("ma_period", 200))
+    min_breadth = float(breadth_cfg.get("min_fraction_above_ma", 0.55))
+    min_eligible = int(breadth_cfg.get("min_eligible_etfs", 30))
+    adv_window = int(liquidity_cfg.get("adv_window", 20))
+    min_adv = float(liquidity_cfg.get("min_adv_eur", 100000))
+    max_zero_fraction = float(
+        liquidity_cfg.get("max_zero_volume_fraction", 0.20)
+    )
+    if not (0 <= min_breadth <= 1 and 0 <= max_zero_fraction <= 1):
+        raise ValueError("Invalid S3 fraction threshold")
+    if min(trend_ma, breadth_ma, regime_ma, min_eligible, adv_window) < 1:
+        raise ValueError("Invalid S3 rolling window")
+
+    by_ticker = out.groupby("Ticker", group_keys=False)
+    out["_S3TrendMA"] = by_ticker["Close"].transform(
+        lambda s: s.rolling(trend_ma, min_periods=trend_ma).mean()
+    )
+    out["_S3SMA50"] = by_ticker["Close"].transform(
+        lambda s: s.rolling(50, min_periods=50).mean()
+    )
+    out["_S3SMA50Slope"] = by_ticker["_S3SMA50"].transform(
+        lambda s: s.pct_change(10, fill_method=None)
+    )
+    out["S3TrendOK"] = out["Close"].gt(out["_S3TrendMA"])
+    if bool(trend_cfg.get("require_positive_sma50_slope", True)):
+        out["S3TrendOK"] &= out["_S3SMA50Slope"].gt(0)
+
+    close = out.pivot(index="Date", columns="Ticker", values="Close").sort_index()
+    breadth_ma_frame = close.rolling(
+        breadth_ma, min_periods=breadth_ma
+    ).mean()
+    eligible = breadth_ma_frame.notna() & close.notna()
+    fraction = close.gt(breadth_ma_frame).sum(axis=1).div(
+        eligible.sum(axis=1).replace(0, np.nan)
+    )
+    breadth_ok = fraction.ge(min_breadth) & eligible.sum(axis=1).ge(min_eligible)
+    out["S3BreadthOK"] = out["Date"].map(breadth_ok).fillna(False)
+
+    benchmark = str(regime_cfg.get("benchmark", benchmark_ticker))
+    if benchmark in close.columns:
+        benchmark_close = close[benchmark]
+        benchmark_ma_series = benchmark_close.rolling(
+            regime_ma, min_periods=regime_ma
+        ).mean()
+        regime_ok = benchmark_close.gt(benchmark_ma_series)
+    else:
+        # A missing benchmark must not silently disable S3. Cross-sectional
+        # breadth is the explicit, reproducible fallback already in the data.
+        regime_ok = breadth_ok
+    out["S3RegimeOK"] = out["Date"].map(regime_ok).fillna(False)
+
+    out["_S3TradedValue"] = out["Close"] * out["Volume"]
+    out["_S3ZeroVolume"] = out["Volume"].le(0).astype(float)
+    out["_S3ADV"] = by_ticker["_S3TradedValue"].transform(
+        lambda s: s.rolling(adv_window, min_periods=adv_window).mean()
+    )
+    out["_S3ZeroFraction"] = by_ticker["_S3ZeroVolume"].transform(
+        lambda s: s.rolling(adv_window, min_periods=adv_window).mean()
+    )
+    out["S3LiquidityOK"] = (
+        out["_S3ADV"].ge(min_adv) &
+        out["_S3ZeroFraction"].le(max_zero_fraction)
+    )
+    return out.drop(columns=[
+        "_S3TrendMA", "_S3SMA50", "_S3SMA50Slope", "_S3TradedValue",
+        "_S3ZeroVolume", "_S3ADV", "_S3ZeroFraction",
+    ])
+
+
 def latest_orders(prices: pd.DataFrame, name: str, cfg: dict, general: dict) -> list[dict]:
     """Produce operational proposals from the exact same strategy rules."""
     if name == "S0_buyhold":
@@ -449,6 +549,12 @@ def run_backtest(prices: pd.DataFrame, config: dict) -> dict:
     quality = validate_prices(prices, bool(general.get("data", {}).get("strict_quality", True)))
     active = config.get("active_run", "S1_breakout")
     runs = config.get("runs", {})
+    if active in {"all", "S3_breakout_checklist"} and \
+            "S3_breakout_checklist" in runs:
+        prices = _add_s3_context(
+            prices, runs["S3_breakout_checklist"],
+            str(general.get("benchmark_ticker", "SWDA.MI")),
+        )
     if active == "all":
         results = {}
         for name, cfg in runs.items():
@@ -456,8 +562,6 @@ def run_backtest(prices: pd.DataFrame, config: dict) -> dict:
                 all_cfg = {**config, "active_run": name}
                 results[name] = run_backtest(prices, all_cfg)
                 continue
-            if name == "S3_breakout_checklist" and cfg.get("filters"):
-                continue  # external point-in-time series are required
             results[name] = _single_run(prices, name, cfg, general)
         return {"runs": results, "data_quality": quality}
     if active == "S2_multilayer":
@@ -553,8 +657,6 @@ def run_backtest(prices: pd.DataFrame, config: dict) -> dict:
             "orders": [order for layer in layers for order in layer["orders"]],
         }
         return result
-    if active == "S3_breakout_checklist" and runs[active].get("filters"):
-        raise ValueError("S3 requires point-in-time NAV, spread, regime and breadth datasets")
     result = _single_run(prices, active, runs[active], general)
     result["data_quality"] = quality
     result["active_run"] = active
