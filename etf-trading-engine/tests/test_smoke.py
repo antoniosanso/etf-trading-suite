@@ -3,7 +3,7 @@ from src.engine.metrics import sharpe, max_drawdown, calmar, profit_factor
 from src.engine.strategy import (
     breakout_entries, channel_rebound_entries, enrich,
     multi_horizon_breakout_entries, trend_pullback_entries,
-    shock_reversion_entries,
+    shock_reversion_entries, false_breakdown_reclaim_entries,
 )
 import pandas as pd
 import numpy as np
@@ -90,6 +90,21 @@ def config(active="S1_breakout"):
                 "take_profit": {"mode": "moving_average", "field": "EMA20",
                                 "fallback_atr_multiple": 1.5},
             },
+            "S8_false_breakdown_reclaim": {
+                "entry": {"mode": "false_breakdown_reclaim",
+                          "support_lookback_days": 20,
+                          "support_min_periods": 10,
+                          "support_quantile": 0.10,
+                          "min_support_touches": 1,
+                          "touch_tolerance_atr": 1.0,
+                          "break_buffer_atr": 0.05,
+                          "reclaim_buffer_atr": 0.0,
+                          "max_reclaim_days": 2,
+                          "min_close_location": 0.55},
+                "stop_loss": {"mode": "breakdown_low_atr", "atr_multiplier": 0.25},
+                "take_profit": {"mode": "moving_average", "field": "EMA20",
+                                "fallback_atr_multiple": 2.0},
+            },
         },
     }
 
@@ -175,8 +190,46 @@ def test_shock_reversion_does_not_fire_on_shock_bar():
     assert signal.iloc[-1]
 
 
+def test_false_breakdown_uses_prior_support_and_requires_reclaim():
+    df = prices(50)
+    close = np.full(len(df), 100.0)
+    close[-2:] = [97.5, 100.2]
+    df["Close"] = close
+    df["Open"] = close
+    df["High"] = close + 0.5
+    df["Low"] = close - 0.5
+    df.loc[df.index[-2], ["Open", "High", "Low", "Close"]] = [100.0, 100.2, 96.5, 97.5]
+    # Reclaims the old frozen level but does not create a fresh breakdown.
+    df.loc[df.index[-1], ["Open", "High", "Low", "Close"]] = [99.7, 100.5, 99.6, 100.2]
+    out = enrich(df)
+    signal = false_breakdown_reclaim_entries(out, {
+        "support_lookback_days": 20, "support_min_periods": 10,
+        "support_quantile": 0.10, "min_support_touches": 1,
+        "touch_tolerance_atr": 1.0, "break_buffer_atr": 0.05,
+        "max_reclaim_days": 2, "min_close_location": 0.55,
+    })
+    assert not signal.iloc[-2]
+    assert signal.iloc[-1]
+    assert out["FalseBreakdownLow"].iloc[-1] == pytest.approx(96.5)
+
+
+def test_false_breakdown_does_not_reclaim_after_expiry():
+    df = prices(55)
+    df[["Open", "High", "Low", "Close"]] = [100.0, 100.5, 99.5, 100.0]
+    df.loc[df.index[-4], ["Open", "High", "Low", "Close"]] = [100.0, 100.2, 96.5, 97.0]
+    df.loc[df.index[-1], ["Open", "High", "Low", "Close"]] = [98.0, 100.5, 97.8, 100.2]
+    signal = false_breakdown_reclaim_entries(enrich(df), {
+        "support_lookback_days": 20, "support_min_periods": 10,
+        "support_quantile": 0.10, "min_support_touches": 1,
+        "touch_tolerance_atr": 1.0, "break_buffer_atr": 0.05,
+        "max_reclaim_days": 2, "min_close_location": 0.55,
+    })
+    assert not signal.iloc[-1]
+
+
 @pytest.mark.parametrize("active", [
-    "S5_trend_pullback", "S6_multi_horizon_breakout", "S7_shock_reversion"
+    "S5_trend_pullback", "S6_multi_horizon_breakout", "S7_shock_reversion",
+    "S8_false_breakdown_reclaim",
 ])
 def test_new_strategies_execute(active):
     out = run_backtest(prices(), config(active))
