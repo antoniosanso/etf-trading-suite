@@ -38,11 +38,11 @@ runs:
     guardrails: {sharpe_min: -999.0, profit_factor_min: 0.0, maxdd_abs_max_pct: 100.0, wf_calmar_cov_max_pct: 100.0}
 
   S1_breakout:
-    description: "Breakout 52w +0,3% con SL -7% e TP +14%"
+    description: "Breakout 52w +0,3% con livelli adattivi a volatilità e struttura"
     universe: "etf-trading-config/universe.csv"
     entry: {mode: "breakout_52w", lookback_days: 252, buffer_pct: 0.3}
-    stop_loss: {mode: "percent", value_pct: 7.0}
-    take_profit: {mode: "percent", value_pct: 14.0}
+    stop_loss: {mode: "adaptive_atr_structure", lookback_days: 20, atr_multiple: 2.5, structure_buffer_atr: 0.25}
+    take_profit: {mode: "adaptive_risk_atr", risk_multiple: 2.0, min_atr_multiple: 3.0}
     exit: {break_even_after_tp1: false}
     guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 35.0, wf_calmar_cov_max_pct: 30.0}
 
@@ -54,20 +54,20 @@ runs:
       scaling_tranches:
         - {mode: "market_now", weight_pct: 33.0}
         - {mode: "pullback_dma", dmas: [20, 50], weight_pct: 33.0, tolerance_atr: 0.35, rsi_min: 30, rsi_max: 55, stop_atr_multiplier: 0.60}
-        - {mode: "multi_horizon_breakout", lookback_days: [63, 126, 252], min_confirmations: 2, buffer_pct: 0.3, stop_pct: 10.0, weight_pct: 34.0}
+        - {mode: "multi_horizon_breakout", lookback_days: [63, 126, 252], min_confirmations: 2, buffer_pct: 0.3, stop_lookback_days: 20, stop_atr_multiple: 2.5, structure_buffer_atr: 0.25, weight_pct: 34.0}
       trailing_pct_by_ticker: {TNOW.MI: 12.0, XAIX.MI: 15.0, default: 12.0}
     tactical:
       entry: {mode: "breakout_52w", buffer_pct: 0.3}
-      stop_loss: {mode: "percent", value_pct: 7.0}
-      take_profit: {mode: "percent", value_pct: 14.0}
+      stop_loss: {mode: "adaptive_atr_structure", lookback_days: 20, atr_multiple: 2.5, structure_buffer_atr: 0.25}
+      take_profit: {mode: "adaptive_risk_atr", risk_multiple: 2.0, min_atr_multiple: 3.0}
     guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 35.0, wf_calmar_cov_max_pct: 30.0}
 
   S3_breakout_checklist:
     description: "Breakout 52w + filtri (NAV P/D, spread, stagionalità, regime, breadth)"
     universe: "etf-trading-config/universe.csv"
     entry: {mode: "breakout_52w", buffer_pct: 0.3}
-    stop_loss: {mode: "percent", value_pct: 7.0}
-    take_profit: {mode: "percent", value_pct: 14.0}
+    stop_loss: {mode: "adaptive_atr_structure", lookback_days: 20, atr_multiple: 2.5, structure_buffer_atr: 0.25}
+    take_profit: {mode: "adaptive_risk_atr", risk_multiple: 2.0, min_atr_multiple: 3.0}
     filters:
       nav_premium_abs_max_pct: 0.5
       spread_median_max_pct: 0.25
@@ -97,7 +97,7 @@ runs:
       {mode: "trend_pullback", tolerance_atr: 0.35, rsi_min: 30, rsi_max: 55,
        sma50_slope_min: 0.0}
     stop_loss: {mode: "signal_low_atr", atr_multiplier: 0.60}
-    take_profit: {mode: "percent", value_pct: 12.0, tp2_atr_multiple: 3.0}
+    take_profit: {mode: "moving_average", field: "SMA50", fallback_atr_multiple: 2.0, tp2_atr_multiple: 3.0}
     risk: {risk_per_trade_pct: 0.75}
     guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 25.0, wf_calmar_cov_max_pct: 30.0}
 
@@ -107,8 +107,8 @@ runs:
     entry:
       {mode: "multi_horizon_breakout", lookback_days: [20, 63, 126, 252],
        min_confirmations: 2, buffer_pct: 0.3, trend_filter: true}
-    stop_loss: {mode: "percent", value_pct: 7.0}
-    take_profit: {mode: "percent", value_pct: 14.0}
+    stop_loss: {mode: "adaptive_atr_structure", lookback_days: 20, atr_multiple: 2.5, structure_buffer_atr: 0.25}
+    take_profit: {mode: "adaptive_risk_atr", risk_multiple: 2.0, min_atr_multiple: 3.0}
     risk: {risk_per_trade_pct: 1.0}
     guardrails: {sharpe_min: 0.30, profit_factor_min: 1.10, maxdd_abs_max_pct: 30.0, wf_calmar_cov_max_pct: 30.0}
 

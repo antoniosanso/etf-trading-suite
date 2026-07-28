@@ -6,7 +6,6 @@ from .trading_costs import FinecoCosts, position_size
 
 
 def build_orders(signals: pd.DataFrame, capital: float, risk_pct: float = 1.5,
-                 stop_pct: float = 7.0, take_profit_pct: float = 14.0,
                  costs: FinecoCosts | None = None, max_positions: int = 3) -> pd.DataFrame:
     costs = costs or FinecoCosts()
     columns = ["Ticker", "Action", "Entry", "Exit", "Stop", "Target", "Quantity",
@@ -16,12 +15,20 @@ def build_orders(signals: pd.DataFrame, capital: float, risk_pct: float = 1.5,
     price_col = next((c for c in ("Entry", "Close", "Price") if c in signals), None)
     if not price_col:
         return pd.DataFrame(columns=columns)
+    if "Stop" not in signals or not ({"TP1", "Target"} & set(signals.columns)):
+        raise ValueError(
+            "Each operation must include strategy-calculated Stop and TP1/Target levels"
+        )
     rows = []
     allocation_pct = 100 / max(1, max_positions)
     for _, signal in signals.head(max_positions).iterrows():
         entry = float(signal[price_col])
-        stop = float(signal.get("Stop", entry * (1 - stop_pct / 100)))
-        target = float(signal.get("TP1", signal.get("Target", entry * (1 + take_profit_pct / 100))))
+        stop = float(signal["Stop"])
+        target = float(signal["TP1"] if "TP1" in signal else signal["Target"])
+        if not (stop < entry < target):
+            raise ValueError(
+                f"Invalid calculated levels for {signal['Ticker']}: require Stop < Entry < Target"
+            )
         qty = position_size(capital, risk_pct, entry, stop, costs, allocation_pct)
         rows.append({
             "Ticker": signal["Ticker"], "Action": "BUY", "Entry": entry,

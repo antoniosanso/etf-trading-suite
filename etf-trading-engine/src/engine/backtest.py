@@ -87,6 +87,32 @@ def _commission(notional: float, costs: dict) -> float:
     return costs["commission_fixed"] + abs(notional) * costs["commission_pct"]
 
 
+def _adaptive_levels(df: pd.DataFrame, signal_index: int, entry: float,
+                     cfg: dict) -> tuple[float, float]:
+    """Calculate volatility- and structure-aware levels for one operation."""
+    stop_cfg = cfg.get("stop_loss", {})
+    tp_cfg = cfg.get("take_profit", {})
+    lookback = int(stop_cfg.get("lookback_days", 20))
+    atr_value = float(df.loc[signal_index, "ATR14"])
+    recent_low = float(
+        df.loc[max(0, signal_index - lookback + 1):signal_index, "Low"].min()
+    )
+    atr_stop = entry - float(stop_cfg.get("atr_multiple", 2.5)) * atr_value
+    structural_stop = recent_low - float(
+        stop_cfg.get("structure_buffer_atr", 0.25)
+    ) * atr_value
+    # Use the nearer valid protection while requiring room for normal volatility.
+    stop = max(atr_stop, structural_stop)
+    if not math.isfinite(stop) or stop >= entry:
+        stop = atr_stop
+    risk = entry - stop
+    target = entry + max(
+        float(tp_cfg.get("risk_multiple", 2.0)) * risk,
+        float(tp_cfg.get("min_atr_multiple", 3.0)) * atr_value,
+    )
+    return stop, target
+
+
 def _strategy_signals(df: pd.DataFrame, name: str, cfg: dict) -> pd.Series:
     if name == "S0_buyhold":
         signal = pd.Series(False, index=df.index)
@@ -142,6 +168,8 @@ def _simulate_ticker(df: pd.DataFrame, ticker: str, name: str, cfg: dict,
             entry = _fill(float(row.Open), "buy", costs)
             if stop_cfg and stop_cfg.get("mode") == "percent":
                 stop = entry * (1 - float(stop_cfg["value_pct"]) / 100)
+            elif stop_cfg and stop_cfg.get("mode") == "adaptive_atr_structure":
+                stop, _ = _adaptive_levels(df, i - 1, entry, cfg)
             elif name == "S4_channel_rebound":
                 mult = float(stop_cfg.get("atr_multiplier", 0.6))
                 stop = min(float(df.loc[i - 1, "Low"]),
@@ -156,6 +184,8 @@ def _simulate_ticker(df: pd.DataFrame, ticker: str, name: str, cfg: dict,
                 stop = math.nan
             if tp_cfg and tp_cfg.get("mode") == "percent":
                 tp = entry * (1 + float(tp_cfg["value_pct"]) / 100)
+            elif tp_cfg and tp_cfg.get("mode") == "adaptive_risk_atr":
+                _, tp = _adaptive_levels(df, i - 1, entry, cfg)
             elif name == "S4_channel_rebound":
                 target = tp_cfg.get("tp2", "channel_upper_band")
                 tp = float(df.loc[i - 1, "ChannelUpper" if target == "channel_upper_band" else "ChannelMid"])
@@ -298,7 +328,11 @@ def latest_orders(prices: pd.DataFrame, name: str, cfg: dict, general: dict) -> 
             continue
         row = df.iloc[-1]
         entry = float(row.Close)  # indicative; execution is next open in backtest
-        if name == "S4_channel_rebound":
+        if cfg.get("stop_loss", {}).get("mode") == "adaptive_atr_structure":
+            stop, tp1 = _adaptive_levels(df, len(df) - 1, entry, cfg)
+            tp2 = tp1
+            reason = f"{cfg.get('entry', {}).get('mode', name)}_adaptive_levels"
+        elif name == "S4_channel_rebound":
             stop = min(float(row.Low), float(row.ChannelLower)) - \
                 float(cfg["stop_loss"].get("atr_multiplier", 0.6)) * float(row.ATR14)
             tp1, tp2 = float(row.ChannelMid), float(row.ChannelUpper)
@@ -474,8 +508,10 @@ def run_backtest(prices: pd.DataFrame, config: dict) -> dict:
                         "buffer_pct": tranche.get("buffer_pct", 0.3),
                     },
                     "stop_loss": {
-                        "mode": "percent",
-                        "value_pct": tranche.get("stop_pct", 10.0),
+                        "mode": "adaptive_atr_structure",
+                        "lookback_days": tranche.get("stop_lookback_days", 20),
+                        "atr_multiple": tranche.get("stop_atr_multiple", 2.5),
+                        "structure_buffer_atr": tranche.get("structure_buffer_atr", 0.25),
                     },
                 }
             else:
