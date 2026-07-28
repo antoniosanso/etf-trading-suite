@@ -1,11 +1,15 @@
 trading:
-  capital_eur: 10000
-  lines: 3
-  breakout_margin_pct: 0.3
-  sl_pct: 7
-  tp_pct: 14
-  p_win: 0.45
-  risk_per_trade_pct: 1.5
+  capital_eur: 105000
+  max_positions: 3
+  max_allocation_per_position_pct: 50
+  risk_per_trade_pct: 1.0
+  max_total_risk_pct: 3.0
+  min_average_daily_value_eur: 100000
+  max_data_age_days: 5
+  validation_max_age_days: 7
+  order_type: "LIMIT"
+  execution_mode: "PROPOSAL_ONLY"
+  manual_confirmation_required: true
   horizon: "20–60 gg"
   prefer_signals: true
   tickers_override: []
