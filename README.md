@@ -5,7 +5,17 @@ Suite pronta per GitHub con:
 - **Config** (parametri, universo, schedule)
 - **CI** (GitHub Actions: merge dati → backtest → artifact KPI)
 
-Datalake usato in read‑only: `antoniosanso/etf-datalake`
+Datalake usato in read-only: `antoniosanso/etf-datalake`
+
+## Documentazione operativa obbligatoria
+
+Prima di modificare strategie, interpretare segnali o formulare indicazioni su denaro reale, leggere nell'ordine:
+
+1. [`README_OPS.md`](README_OPS.md) — contesto, stato operativo e gerarchia delle fonti;
+2. [`DECISIONS.md`](DECISIONS.md) — decisioni attive, regole superate e correzioni;
+3. [`RUNBOOK.md`](RUNBOOK.md) — controlli obbligatori su posizione, dati, livelli, rischio e calcoli.
+
+I segnali e i guardrail della suite sono input analitici e non equivalgono a un ordine eseguibile. In caso di conflitto, prevalgono le decisioni più recenti registrate in `DECISIONS.md`.
 
 ## Come pubblicare su GitHub (Windows, 2 minuti)
 1) Apri **Prompt dei comandi** nella cartella di questa suite.
@@ -18,8 +28,8 @@ git branch -M main
 git remote add origin https://github.com/antoniosanso/etf-trading-suite.git
 git push -u origin main
 ```
-3) Su GitHub → tab **Actions** → workflow “Backtest (CI)”.  
-   Al termine scarica l’artifact **backtest-artifacts** (KPIs + equity curve).
+3) Su GitHub → tab **Actions** → workflow “Backtest (CI)”.
+   Al termine scarica l'artifact **backtest-artifacts** (KPI + equity curve).
 
 ## Esecuzione locale (facoltativa)
 ```
